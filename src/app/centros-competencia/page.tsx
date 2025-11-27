@@ -416,6 +416,7 @@ export default function CentrosCompetencia() {
             "Ravelo": "Ravelo.jpg",
             "Rodriguez Alberto": "Rodriguez Alberto.jpg",
             "Rodriguez Campos": "Rodriguez Campos.png",
+            "Saint Andrew's": "Saint Andrews.jpg",
             "Saint Andrews": "Saint Andrews.jpg",
             "Salesianas": "Salesianas.jpg",
             "San Agustin": "San Agustin.jpg",
