@@ -7,11 +7,11 @@ const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest) {
     try {
-        const { nick, password } = await request.json();
+        const { email, password } = await request.json();
 
         // Buscar usuario
         const user = await prisma.user.findUnique({
-            where: { nick }
+            where: { email }
         });
 
         if (!user || !user.password) {
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Crear token JWT
-        const token = signToken({ userId: user.id, nick: user.nick });
+        const token = signToken({ userId: user.id, email: user.email });
 
         // Devolver usuario sin contraseña
         const { password: _, ...userWithoutPassword } = user;

@@ -144,86 +144,30 @@ const PerfilUsuario: React.FC = () => {
 
     // Inicialización y sincronización de usuario y rankings SOLO una vez
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            const usersStr = localStorage.getItem("users");
-            if (usersStr) {
-                let usersArr = JSON.parse(usersStr);
-                usersArr = usersArr.map((u: any) => ({
-                    ...u,
-                    trofeosDesbloqueados: Array.isArray(u.trofeosDesbloqueados)
-                        ? u.trofeosDesbloqueados.filter((idx: number) => idx !== 9)
-                        : []
-                }));
-                localStorage.setItem("users", JSON.stringify(usersArr));
-            }
-        }
-        if (typeof window !== "undefined") {
-            const usersStr = localStorage.getItem("users");
-            const userStr = localStorage.getItem("user");
-            if (usersStr && userStr) {
-                let usersArr = JSON.parse(usersStr);
-                const userObj = JSON.parse(userStr);
-                usersArr = usersArr.map((u: any) => {
-                    const amigosCount = Array.isArray(u.amigos) ? u.amigos.length : 0;
-                    return {
-                        ...u,
-                        trofeosDesbloqueados: Array.isArray(u.trofeosDesbloqueados)
-                            ? u.trofeosDesbloqueados.filter((idx: number) => idx !== 9 || true)
-                            : []
-                    };
-                });
-                // Rankings
-                const rankingLikes = [...usersArr].sort((a, b) => (b.likes || 0) - (a.likes || 0)).slice(0, 3).filter(u => (u.likes || 0) > 0);
-                const rankingComentarios = [...usersArr].sort((a, b) => (b.comentariosRecibidos || 0) - (a.comentariosRecibidos || 0)).slice(0, 3).filter(u => (u.comentariosRecibidos || 0) > 0);
-                const rankingAmigos = [...usersArr].sort((a, b) => (b.amigos?.length || 0) - (a.amigos?.length || 0)).slice(0, 3).filter(u => (u.amigos?.length || 0) > 0);
-                const rankingHistorias = [...usersArr].sort((a, b) => (b.historias?.length || 0) - (a.historias?.length || 0)).slice(0, 3).filter(u => (u.historias?.length || 0) > 0);
-                const rankingConcursos = [...usersArr].sort((a, b) => (b.concursosGanados || 0) - (a.concursosGanados || 0)).slice(0, 3).filter(u => (u.concursosGanados || 0) > 0);
-                const rankingCompeticiones = [...usersArr].sort((a, b) => (b.competicionesSuperadas || 0) - (a.competicionesSuperadas || 0)).slice(0, 3).filter(u => (u.competicionesSuperadas || 0) > 0);
-                usersArr = usersArr.map((u: any) => ({
-                    ...u,
-                    estaEnRanking:
-                        rankingLikes.some(r => r.nick === u.nick) ||
-                        rankingComentarios.some(r => r.nick === u.nick) ||
-                        rankingAmigos.some(r => r.nick === u.nick) ||
-                        rankingHistorias.some(r => r.nick === u.nick) ||
-                        rankingConcursos.some(r => r.nick === u.nick) ||
-                        rankingCompeticiones.some(r => r.nick === u.nick),
-                    estaEnRankingCompeticiones:
-                        rankingCompeticiones.some(r => r.nick === u.nick)
-                }));
-                let userFromArr = usersArr.find((u: any) => u.nick === userObj.nick);
-                if (!userFromArr) userFromArr = userObj;
-                if (userFromArr) {
-                    const amigosStr = localStorage.getItem(`amigos_${userObj.nick}`);
-                    let amigosArr = [];
-                    if (amigosStr) {
-                        try { amigosArr = JSON.parse(amigosStr); } catch { amigosArr = []; }
-                    }
-                    if (!Array.isArray(amigosArr)) amigosArr = [];
-                    let competicionesSuperadas = userFromArr.competicionesSuperadas;
-                    if (typeof competicionesSuperadas !== 'number') {
-                        competicionesSuperadas = userObj.competicionesSuperadas || 0;
-                    }
-                    let trofeosDesbloqueados = userFromArr.trofeosDesbloqueados;
-                    let trofeosBloqueados = userFromArr.trofeosBloqueados || [];
-                    const amigosCount = Array.isArray(amigosArr) ? amigosArr.length : 0;
-                    if (Array.isArray(trofeosDesbloqueados)) {
-                        trofeosDesbloqueados = trofeosDesbloqueados.filter(idx => idx !== 9 || true);
-                    }
-                    const autoTrofeos = TROFEOS_AUTO
-                        .map((t, idx) => (typeof t.condicion === 'function' && t.condicion({ ...userFromArr, amigos: amigosArr })) ? idx : null)
-                        .filter((idx: number | null) => idx !== null);
-                    const usuarioActualizado = { ...userFromArr, amigos: amigosArr, competicionesSuperadas, estaEnRanking: userFromArr.estaEnRanking, trofeosDesbloqueados, trofeosBloqueados, autoTrofeos };
-                    setUser(usuarioActualizado);
-                    // Asignar trofeos si el centro ganó premios este mes
-                    asignarTrofeosUsuario(usuarioActualizado as Usuario);
+        // Obtener usuario actual
+        fetch('/api/auth/me')
+            .then(response => response.json())
+            .then(data => {
+                if (data.user) {
+                    setUser(data.user);
+                } else {
+                    // No está logueado, redirigir
+                    router.push('/');
                 }
-                setUsuarios(usersArr);
-                localStorage.setItem("users", JSON.stringify(usersArr));
-            }
-            const lastId = localStorage.getItem("lastConcursoId");
-            if (lastId) setConcursoId(parseInt(lastId) + 1);
-        }
+            })
+            .catch(() => {
+                router.push('/');
+            });
+
+        // Obtener lista de usuarios
+        fetch('/api/users')
+            .then(response => response.json())
+            .then(users => {
+                setUsuarios(users);
+            })
+            .catch(error => {
+                console.warn('No se pudo cargar la lista de usuarios:', error);
+            });
     }, []);
 
     // Cargar mensajes del chat y aviso solo cuando cambia el usuario
@@ -734,8 +678,8 @@ const PerfilUsuario: React.FC = () => {
                 <div className="flex flex-row w-full">
                     {/* Datos personales */}
                     <div className={`max-w-md w-full bg-white shadow rounded p-6 ml-8 transition-all duration-500 ${isPremium
-                            ? 'border-4 border-yellow-400 shadow-2xl shadow-yellow-400/50 animate-pulse relative overflow-hidden'
-                            : ''
+                        ? 'border-4 border-yellow-400 shadow-2xl shadow-yellow-400/50 animate-pulse relative overflow-hidden'
+                        : ''
                         }`}>
                         {/* Efecto de partículas para premium */}
                         {isPremium && (
@@ -886,8 +830,8 @@ const PerfilUsuario: React.FC = () => {
                             </div>
                             {/* Trofeos Premium */}
                             <div className={`max-w-md w-full bg-white shadow rounded p-6 transition-all duration-500 ${isPremium
-                                    ? 'border-4 border-yellow-400 shadow-2xl shadow-yellow-400/50 animate-pulse relative overflow-hidden'
-                                    : ''
+                                ? 'border-4 border-yellow-400 shadow-2xl shadow-yellow-400/50 animate-pulse relative overflow-hidden'
+                                : ''
                                 }`}>
                                 {/* Efectos premium para trofeos */}
                                 {isPremium && (

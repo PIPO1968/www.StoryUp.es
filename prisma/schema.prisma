@@ -20,6 +20,7 @@ model User {
   centro    String?
   curso     String?
   tipo      String?  // "estudiante" o "docente"
+  language  String?  @default("es") // Idioma preferido
   fechaInscripcion DateTime?
   likes     Int      @default(0)
   respuestasAcertadas Int @default(0)
@@ -29,6 +30,10 @@ model User {
   historiasCreadas Int @default(0)
   anosEnStoryUp Int @default(0)
   premium   Boolean  @default(false)
+  // Campos para estadísticas JSON
+  stats_individual Json?
+  stats_centro Json?
+  stats_docente Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

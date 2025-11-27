@@ -620,28 +620,54 @@ export const I18nProvider = ({ children, defaultLang = "es" as Lang }: { childre
     const [lang, setLang] = useState<Lang>(defaultLang);
 
     useEffect(() => {
-        // Prefer saved localStorage language if available
-        if (typeof window !== "undefined") {
-            const saved = localStorage.getItem('locale');
-            if (saved && ['es', 'en', 'fr', 'de'].includes(saved)) {
-                setLang(saved as Lang);
-                return;
+        const loadLanguage = async () => {
+            try {
+                // Intentar obtener idioma del usuario desde API
+                const response = await fetch('/api/settings/language');
+                const data = await response.json();
+                if (data.language && ['es', 'en', 'fr', 'de'].includes(data.language)) {
+                    setLang(data.language as Lang);
+                    return;
+                }
+            } catch (error) {
+                // Si falla, usar localStorage como fallback
+                if (typeof window !== "undefined") {
+                    const saved = localStorage.getItem('locale');
+                    if (saved && ['es', 'en', 'fr', 'de'].includes(saved)) {
+                        setLang(saved as Lang);
+                        return;
+                    }
+                }
             }
-            // Otherwise try browser language
-            const browser = navigator.language?.slice(0, 2);
-            if (browser && (browser === "es" || browser === "en" || browser === "fr" || browser === "de")) {
-                setLang(browser as Lang);
+
+            // Fallback a idioma del navegador
+            if (typeof window !== "undefined") {
+                const browser = navigator.language?.slice(0, 2);
+                if (browser && (browser === "es" || browser === "en" || browser === "fr" || browser === "de")) {
+                    setLang(browser as Lang);
+                }
             }
-        }
+        };
+
+        loadLanguage();
     }, []);
 
     const t = (key: string) => {
         return translations[lang][key] || translations['es'][key] || key;
     };
 
-    const changeLang = (l: Lang) => {
+    const changeLang = async (l: Lang) => {
         setLang(l);
-        if (typeof window !== 'undefined') localStorage.setItem('locale', l);
+        // Guardar en la API si el usuario está logueado
+        try {
+            await fetch('/api/settings/language', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ language: l })
+            });
+        } catch (error) {
+            // Silently fail - no problem if not saved
+        }
     };
 
     return (

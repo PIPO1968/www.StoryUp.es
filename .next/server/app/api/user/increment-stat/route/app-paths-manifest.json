@@ -1,0 +1,3 @@
+{
+  "/api/user/increment-stat/route": "app/api/user/increment-stat/route.js"
+}

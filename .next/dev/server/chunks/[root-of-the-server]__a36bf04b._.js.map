@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 52, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/user/Desktop/StoryUp/src/app/api/users/route.ts"],"sourcesContent":["import { NextRequest, NextResponse } from 'next/server';\r\nimport { PrismaClient } from '@prisma/client';\r\n\r\nconst prisma = new PrismaClient();\r\n\r\nexport async function GET(request: NextRequest) {\r\n    try {\r\n        const users = await prisma.user.findMany({\r\n            include: {\r\n                historias: true,\r\n                amigosComoUser: true,\r\n                amigosComoAmigo: true,\r\n            }\r\n        });\r\n        return NextResponse.json(users);\r\n    } catch (error) {\r\n        console.error('Error al obtener usuarios:', error);\r\n        return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });\r\n    }\r\n}"],"names":[],"mappings":";;;;AAAA;AACA;;;AAEA,MAAM,SAAS,IAAI,6IAAY;AAExB,eAAe,IAAI,OAAoB;IAC1C,IAAI;QACA,MAAM,QAAQ,MAAM,OAAO,IAAI,CAAC,QAAQ,CAAC;YACrC,SAAS;gBACL,WAAW;gBACX,gBAAgB;gBAChB,iBAAiB;YACrB;QACJ;QACA,OAAO,gJAAY,CAAC,IAAI,CAAC;IAC7B,EAAE,OAAO,OAAO;QACZ,QAAQ,KAAK,CAAC,8BAA8B;QAC5C,OAAO,gJAAY,CAAC,IAAI,CAAC;YAAE,OAAO;QAA6B,GAAG;YAAE,QAAQ;QAAI;IACpF;AACJ","debugId":null}}]
+}

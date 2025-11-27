@@ -87,14 +87,14 @@ const RegisterLoginForm: React.FC = () => {
                 <form onSubmit={async e => {
                     e.preventDefault();
                     const formData = new FormData(e.target as HTMLFormElement);
-                    const nick = formData.get('nick') as string;
+                    const email = formData.get('email') as string;
                     const password = formData.get('password') as string;
 
                     try {
                         const response = await fetch('/api/auth/login', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ nick, password })
+                            body: JSON.stringify({ email, password })
                         });
                         const data = await response.json();
                         if (data.error) {
@@ -107,7 +107,7 @@ const RegisterLoginForm: React.FC = () => {
                         alert('Error en el login');
                     }
                 }}>
-                    <input type="text" name="nick" placeholder="Nick" className="w-full mb-2 p-2 border rounded" required />
+                    <input type="email" name="email" placeholder="Email" className="w-full mb-2 p-2 border rounded" required />
                     <input type="password" name="password" placeholder="Contraseña" className="w-full mb-4 p-2 border rounded" required />
                     <button type="submit" className="w-full bg-green-600 text-white py-2 rounded">Iniciar sesión</button>
                 </form>
