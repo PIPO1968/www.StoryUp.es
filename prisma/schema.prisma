@@ -23,12 +23,14 @@ model User {
   // Relaciones
   historias     Historia[]
   noticias      Noticia[]
-  amigos        Amigo[]
+  amigosComoUser    Amigo[] @relation("amigosComoUser")
+  amigosComoAmigo   Amigo[] @relation("amigosComoAmigo")
   chat          Chat[]
   campeonatos   Campeonato[]
   concursos     Concurso[]
   solicitudes   SolicitudPremium[]
   sesiones      SesionUsuario[]
+  premios       PremioMensual[]
 
   @@map("users")
 }
@@ -62,8 +64,8 @@ model Amigo {
   id        Int      @id @default(autoincrement())
   userId    Int
   amigoId   Int
-  user      User     @relation(fields: [userId], references: [id])
-  amigo     User     @relation(fields: [amigoId], references: [id])
+  user      User     @relation("amigosComoUser", fields: [userId], references: [id])
+  amigo     User     @relation("amigosComoAmigo", fields: [amigoId], references: [id])
   createdAt DateTime @default(now())
 
   @@map("amigos")
