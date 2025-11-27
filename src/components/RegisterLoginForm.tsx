@@ -100,6 +100,8 @@ const RegisterLoginForm: React.FC = () => {
                         if (data.error) {
                             alert(data.error);
                         } else {
+                            // Guardar usuario en localStorage
+                            localStorage.setItem('user', JSON.stringify(data.user));
                             // Usuario logueado (cookie set)
                             window.location.href = '/perfil';
                         }
