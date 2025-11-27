@@ -232,26 +232,34 @@ export default function AprendeConPipo() {
     }, [timeLeft, preguntaActual, bloqueado]);
 
     // Cargar preguntas de todos los archivos según curso automático y materia
-    const preguntas = React.useMemo(() => {
-        let cursoNum = 1;
-        if (cursoUsuario) {
-            const match = cursoUsuario.match(/(\d+)/);
-            if (match) cursoNum = Number(match[1]);
-        }
-        const materias = [
-            "matematicas", "lenguaje", "literatura", "historia", "geografia", "naturaleza", "ingles", "general", "campeonato"
-        ];
-        let todas: any[] = [];
-        for (const materia of materias) {
-            try {
-                // @ts-ignore
-                const preguntasMateria = require(`../../questions/${materia}-${cursoNum}primaria.json`);
-                todas = todas.concat(preguntasMateria);
-            } catch {
-                // Si no existe el archivo, lo ignora
+    const [preguntas, setPreguntas] = React.useState<any[]>([]);
+
+    // Cargar preguntas desde la API
+    React.useEffect(() => {
+        const cargarPreguntas = async () => {
+            let cursoNum = 1;
+            if (cursoUsuario) {
+                const match = cursoUsuario.match(/(\d+)/);
+                if (match) cursoNum = Number(match[1]);
             }
-        }
-        return todas;
+            const materias = [
+                "matematicas", "lenguaje", "literatura", "historia", "geografia", "naturaleza", "ingles", "general", "campeonato"
+            ];
+            let todas: any[] = [];
+            for (const materia of materias) {
+                try {
+                    const response = await fetch(`/api/questions?curso=${cursoNum}primaria&asignatura=${materia}`);
+                    if (response.ok) {
+                        const preguntasMateria = await response.json();
+                        todas = todas.concat(preguntasMateria);
+                    }
+                } catch {
+                    // Si falla, lo ignora
+                }
+            }
+            setPreguntas(todas);
+        };
+        cargarPreguntas();
     }, [cursoUsuario]);
 
     // Filtrar preguntas por asignatura

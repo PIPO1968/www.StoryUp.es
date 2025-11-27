@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest) {
     try {
@@ -10,29 +11,18 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 });
         }
 
-        const fileName = `${asignatura}-${curso}.json`;
-        const filePath = path.join(process.cwd(), 'src', 'questions', fileName);
+        // Insertar la nueva pregunta en la base de datos
+        const nuevaPregunta = await prisma.pregunta.create({
+            data: {
+                pregunta: pregunta.trim(),
+                respuesta: respuesta.trim(),
+                categoria: asignatura.charAt(0).toUpperCase() + asignatura.slice(1), // Capitalizar
+                curso: curso,
+                asignatura: asignatura
+            }
+        });
 
-        // Verificar si el archivo existe
-        if (!fs.existsSync(filePath)) {
-            return NextResponse.json({ error: `Archivo ${fileName} no encontrado` }, { status: 404 });
-        }
-
-        // Leer el archivo
-        const fileContent = fs.readFileSync(filePath, 'utf-8');
-        let questions = JSON.parse(fileContent);        // Agregar la nueva pregunta
-        const nuevaPregunta = {
-            pregunta: pregunta.trim(),
-            respuesta: respuesta.trim(),
-            categoria: asignatura.charAt(0).toUpperCase() + asignatura.slice(1) // Capitalizar
-        };
-
-        questions.push(nuevaPregunta);
-
-        // Escribir de vuelta
-        fs.writeFileSync(filePath, JSON.stringify(questions, null, 2));
-
-        return NextResponse.json({ message: `Pregunta agregada a ${fileName}` });
+        return NextResponse.json({ message: `Pregunta agregada con ID ${nuevaPregunta.id}` });
     } catch (error) {
         console.error('Error al agregar pregunta:', error);
         return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
