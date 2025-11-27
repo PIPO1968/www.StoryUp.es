@@ -9,12 +9,17 @@ const RegisterLoginForm: React.FC = () => {
     const [isRegister, setIsRegister] = useState(true);
 
     React.useEffect(() => {
-        if (typeof window !== "undefined") {
-            const user = localStorage.getItem("user");
-            if (user) {
-                window.location.href = "/perfil";
-            }
-        }
+        // Verificar si el usuario está logueado
+        fetch('/api/auth/me')
+            .then(response => response.json())
+            .then(data => {
+                if (data.user) {
+                    window.location.href = "/perfil";
+                }
+            })
+            .catch(() => {
+                // No está logueado, mostrar formulario
+            });
     }, []);
 
     return (
@@ -47,7 +52,7 @@ const RegisterLoginForm: React.FC = () => {
                         if (data.error) {
                             alert(data.error);
                         } else {
-                            localStorage.setItem("user", JSON.stringify(data.user));
+                            // Usuario registrado y logueado automáticamente (cookie set)
                             window.location.href = '/perfil';
                         }
                     } catch (error) {
@@ -95,7 +100,7 @@ const RegisterLoginForm: React.FC = () => {
                         if (data.error) {
                             alert(data.error);
                         } else {
-                            localStorage.setItem("user", JSON.stringify(data.user));
+                            // Usuario logueado (cookie set)
                             window.location.href = '/perfil';
                         }
                     } catch (error) {

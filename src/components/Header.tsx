@@ -23,44 +23,39 @@ const Header: React.FC = () => {
 
     const { lang, setLang, t } = useTranslation();
 
-    // Obtener usuario actual
+    // Obtener usuario actual y lista de usuarios
     const [user, setUser] = useState<any>(null);
     const [registeredUsers, setRegisteredUsers] = useState<number | null>(null);
     const [onlineUsers, setOnlineUsers] = useState<number | null>(null);
     const [isPremium, setIsPremium] = useState(false);
+
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            const usersStr = localStorage.getItem("users");
-            const userStr = localStorage.getItem("user");
-            let usersArr = [];
-            if (usersStr) {
-                try {
-                    usersArr = JSON.parse(usersStr);
-                } catch { }
-            }
-            setRegisteredUsers(usersArr.length);
-            if (userStr) {
-                const currentUser = JSON.parse(userStr);
-                setUser(currentUser);
-
-                // Verificar si el usuario actual es Premium
-                const premiumInfo = localStorage.getItem(`premium_${currentUser.nick}`);
-                if (premiumInfo) {
-                    try {
-                        const premium = JSON.parse(premiumInfo);
-                        if (new Date(premium.expiracion) > new Date()) {
-                            setIsPremium(true);
-                        }
-                    } catch {
-                        setIsPremium(false);
-                    }
+        // Obtener usuario actual
+        fetch('/api/auth/me')
+            .then(response => response.json())
+            .then(data => {
+                if (data.user) {
+                    setUser(data.user);
+                    setIsPremium(data.user.premium || false);
+                    setOnlineUsers(1);
+                } else {
+                    setOnlineUsers(0);
                 }
-
-                setOnlineUsers(1);
-            } else {
+            })
+            .catch(() => {
                 setOnlineUsers(0);
-            }
-        }
+            });
+
+        // Obtener lista de usuarios
+        fetch('/api/users')
+            .then(response => response.json())
+            .then(users => {
+                setRegisteredUsers(users.length);
+            })
+            .catch(error => {
+                console.warn('No se pudo cargar la lista de usuarios:', error);
+                setRegisteredUsers(0);
+            });
     }, []);
     return (
         <header className="w-full flex items-center justify-between bg-blue-900 shadow px-6 py-3 text-white">
@@ -135,11 +130,8 @@ const Header: React.FC = () => {
                 </select>
                 <button
                     className="bg-red-500 text-white px-3 py-1 rounded"
-                    onClick={() => {
-                        if (typeof window !== 'undefined') {
-                            localStorage.removeItem('user');
-                            localStorage.removeItem('token');
-                        }
+                    onClick={async () => {
+                        await fetch('/api/auth/logout', { method: 'POST' });
                         window.location.href = '/';
                     }}
                 >{t("cerrarSesion")}</button>

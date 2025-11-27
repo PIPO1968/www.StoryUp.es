@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { signToken } from '@/utils/jwt';
 
 const prisma = new PrismaClient();
 
@@ -42,7 +43,20 @@ export async function POST(request: NextRequest) {
             } as any
         });
 
-        return NextResponse.json({ message: 'Usuario registrado exitosamente', user: { id: user.id, nick: user.nick } });
+        // Crear token JWT
+        const token = signToken({ userId: user.id, nick: user.nick });
+
+        const response = NextResponse.json({ message: 'Usuario registrado exitosamente', user: { id: user.id, nick: user.nick } });
+
+        // Setear cookie con el token
+        response.cookies.set('auth-token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 60 * 60 * 24 * 7 // 7 días
+        });
+
+        return response;
     } catch (error) {
         console.error('Error registrando usuario:', error);
         return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
