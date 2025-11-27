@@ -861,10 +861,11 @@ export default function CentrosCompetencia() {
                 setHistorialGanadores(historialGanadores);
 
                 // Cargar todos los usuarios desde la API
+                let usuarios: Usuario[] = [];
                 try {
                     const response = await fetch('/api/users');
                     if (response.ok) {
-                        const usuarios = await response.json();
+                        usuarios = await response.json();
                         setAllUsers(usuarios);
                     } else {
                         console.error('Error al cargar usuarios:', response.status);
@@ -873,6 +874,11 @@ export default function CentrosCompetencia() {
                 } catch (error) {
                     console.error('Error al conectar con la API:', error);
                     setAllUsers([]);
+                }
+
+                if (usuarios.length === 0) {
+                    setLoading(false);
+                    return;
                 }
 
                 // ✅ VERIFICAR SI HAY DATOS PARA LA ASIGNATURA SELECCIONADA
