@@ -7,6 +7,24 @@ const prisma = new PrismaClient();
 
 export async function GET(request: NextRequest) {
     try {
+        // Crear tablas si no existen
+        await prisma.$executeRaw`CREATE TABLE IF NOT EXISTS pregunta (
+            id SERIAL PRIMARY KEY,
+            pregunta TEXT,
+            respuesta TEXT,
+            categoria TEXT,
+            curso TEXT,
+            asignatura TEXT
+        )`;
+
+        await prisma.$executeRaw`CREATE TABLE IF NOT EXISTS trofeo (
+            id SERIAL PRIMARY KEY,
+            imagen TEXT,
+            titulo TEXT,
+            descripcion TEXT,
+            criterio TEXT
+        )`;
+
         // Migrar preguntas
         const questionsDir = path.join(process.cwd(), 'src', 'questions');
         const files = fs.readdirSync(questionsDir).filter(file => file.endsWith('.json'));
@@ -54,7 +72,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ message: 'Migración completada' });
     } catch (error) {
         console.error('Error en migración:', error);
-        return NextResponse.json({ error: 'Error en migración' }, { status: 500 });
+        return NextResponse.json({ error: 'Error en migración: ' + String(error) }, { status: 500 });
     } finally {
         await prisma.$disconnect();
     }
