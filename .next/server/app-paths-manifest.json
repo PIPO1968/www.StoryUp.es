@@ -18,6 +18,7 @@
   "/api/torneos/route": "app/api/torneos/route.js",
   "/api/user/increment-stat/route": "app/api/user/increment-stat/route.js",
   "/api/user/premium-status/route": "app/api/user/premium-status/route.js",
+  "/api/user/update-avatar/route": "app/api/user/update-avatar/route.js",
   "/api/user/update-likes/route": "app/api/user/update-likes/route.js",
   "/api/users/[id]/route": "app/api/users/[id]/route.js",
   "/api/users/route": "app/api/users/route.js",

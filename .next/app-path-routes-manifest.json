@@ -18,6 +18,7 @@
   "/api/torneos/route": "/api/torneos",
   "/api/user/increment-stat/route": "/api/user/increment-stat",
   "/api/user/premium-status/route": "/api/user/premium-status",
+  "/api/user/update-avatar/route": "/api/user/update-avatar",
   "/api/user/update-likes/route": "/api/user/update-likes",
   "/api/users/[id]/route": "/api/users/[id]",
   "/api/users/route": "/api/users",

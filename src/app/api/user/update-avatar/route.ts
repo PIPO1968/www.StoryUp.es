@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Actualizar el avatar del usuario
-        const updatedUser = await prisma.usuario.update({
+        const updatedUser = await prisma.user.update({
             where: { id: userId },
             data: { avatar },
             select: {
