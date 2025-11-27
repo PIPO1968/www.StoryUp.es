@@ -28,22 +28,18 @@ const Sidebar: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            // Cargar usuarios inscritos desde localStorage
-            const usersStr = localStorage.getItem("users");
-            if (usersStr) {
-                try {
-                    const usersArr = JSON.parse(usersStr);
-                    setUsuarios(usersArr);
-                } catch { }
+        const loadUsers = async () => {
+            try {
+                const response = await fetch('/api/users');
+                if (response.ok) {
+                    const users = await response.json();
+                    setUsuarios(users);
+                }
+            } catch (error) {
+                console.error('Error loading users:', error);
             }
-            // Mantener la lógica de mensajes no leídos si es necesario
-            const currentUser = localStorage.getItem("user");
-            if (currentUser) {
-                const user = JSON.parse(currentUser);
-                // Aquí podrías agregar la lógica de mensajes si la necesitas
-            }
-        }
+        };
+        loadUsers();
     }, []);
 
     return (

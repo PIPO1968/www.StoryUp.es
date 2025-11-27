@@ -366,6 +366,13 @@ export default function AprendeConPipo() {
                     const totalAcertadas = parseInt(localStorage.getItem(keyAcertadas) || '0', 10);
                     localStorage.setItem(keyAcertadas, String(totalAcertadas + 1));
 
+                    // Update DB
+                    fetch('/api/user/increment-stat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ nick: userObj.nick, stat: 'respuestasAcertadas', amount: 1 })
+                    }).catch(err => console.error('Error updating DB stats:', err));
+
                     // ✅ NUEVO: Guardar respuestas acertadas por asignatura específica
                     if (objetoPreguntaActual && objetoPreguntaActual.categoria) {
                         const asignaturaNormalizada = objetoPreguntaActual.categoria.toLowerCase();

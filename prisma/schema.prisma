@@ -13,9 +13,21 @@ datasource db {
 model User {
   id        Int      @id @default(autoincrement())
   nick      String   @unique
+  nombre    String?
   email     String?
   password  String?
   avatar    String?
+  centro    String?
+  curso     String?
+  tipo      String?  // "estudiante" o "docente"
+  fechaInscripcion DateTime?
+  likes     Int      @default(0)
+  respuestasAcertadas Int @default(0)
+  competicionesSuperadas Int @default(0)
+  concursosGanados Int @default(0)
+  comentariosRecibidos Int @default(0)
+  historiasCreadas Int @default(0)
+  anosEnStoryUp Int @default(0)
   premium   Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

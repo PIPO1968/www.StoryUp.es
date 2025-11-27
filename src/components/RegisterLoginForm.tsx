@@ -24,7 +24,7 @@ const RegisterLoginForm: React.FC = () => {
                 <button onClick={() => setIsRegister(false)} className={!isRegister ? 'font-bold' : ''}>Login</button>
             </div>
             {isRegister ? (
-                <form onSubmit={e => {
+                <form onSubmit={async e => {
                     e.preventDefault();
                     const formData = new FormData(e.target as HTMLFormElement);
                     const userData = {
@@ -34,29 +34,24 @@ const RegisterLoginForm: React.FC = () => {
                         curso: formData.get('curso') as string,
                         tipo: formData.get('tipo') as string,
                         email: formData.get('email') as string,
-                        password: formData.get('password') as string,
-                        linkPerfil: `/perfil/${formData.get('nick')}`,
-                        fechaInscripcion: new Date().toISOString(),
-                        textoFechaInscripcion: `En StoryUp desde: ${new Date().toLocaleDateString('es-ES')}`,
-                        likes: 0,
-                        amigos: [],
-                        historias: [],
-                        comentarios: []
+                        password: formData.get('password') as string
                     };
-                    let usersArr = [];
-                    const usersStr = localStorage.getItem("users");
-                    if (usersStr) {
-                        try {
-                            usersArr = JSON.parse(usersStr);
-                        } catch { }
-                    }
-                    if (!usersArr.some((u: any) => u.email === userData.email)) {
-                        usersArr.push(userData);
-                        localStorage.setItem("users", JSON.stringify(usersArr));
-                        localStorage.setItem("user", JSON.stringify(userData));
-                        window.location.href = '/perfil';
-                    } else {
-                        alert("Este email ya está registrado. Por favor, inicia sesión.");
+
+                    try {
+                        const response = await fetch('/api/auth/register', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(userData)
+                        });
+                        const data = await response.json();
+                        if (data.error) {
+                            alert(data.error);
+                        } else {
+                            localStorage.setItem("user", JSON.stringify(data.user));
+                            window.location.href = '/perfil';
+                        }
+                    } catch (error) {
+                        alert('Error en el registro');
                     }
                 }}>
                     <input type="text" name="nombre" placeholder="Nombre real" className="w-full mb-2 p-2 border rounded" required />
@@ -84,37 +79,30 @@ const RegisterLoginForm: React.FC = () => {
                     <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded">Registrarse</button>
                 </form>
             ) : (
-                <form onSubmit={e => {
+                <form onSubmit={async e => {
                     e.preventDefault();
                     const formData = new FormData(e.target as HTMLFormElement);
-                    const email = formData.get('email') as string;
+                    const nick = formData.get('nick') as string;
                     const password = formData.get('password') as string;
-                    let usersArr = [];
-                    const usersStr = localStorage.getItem("users");
-                    if (usersStr) {
-                        try {
-                            usersArr = JSON.parse(usersStr);
-                        } catch { }
-                    }
-                    const user = usersArr.find((u: any) => u.email === email);
 
-                    if (user) {
-                        if (!user.password) {
-                            alert("Este usuario no tiene contraseña guardada. Por favor, regístrate de nuevo.");
-                            return;
-                        }
-
-                        if (user.password === password) {
-                            localStorage.setItem("user", JSON.stringify(user));
-                            window.location.href = '/perfil';
+                    try {
+                        const response = await fetch('/api/auth/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ nick, password })
+                        });
+                        const data = await response.json();
+                        if (data.error) {
+                            alert(data.error);
                         } else {
-                            alert("Contraseña incorrecta");
+                            localStorage.setItem("user", JSON.stringify(data.user));
+                            window.location.href = '/perfil';
                         }
-                    } else {
-                        alert("Email no encontrado. Por favor, regístrate.");
+                    } catch (error) {
+                        alert('Error en el login');
                     }
                 }}>
-                    <input type="email" name="email" placeholder="Email" className="w-full mb-2 p-2 border rounded" required />
+                    <input type="text" name="nick" placeholder="Nick" className="w-full mb-2 p-2 border rounded" required />
                     <input type="password" name="password" placeholder="Contraseña" className="w-full mb-4 p-2 border rounded" required />
                     <button type="submit" className="w-full bg-green-600 text-white py-2 rounded">Iniciar sesión</button>
                 </form>
