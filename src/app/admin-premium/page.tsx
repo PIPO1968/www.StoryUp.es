@@ -166,37 +166,25 @@ export default function AdminPremium() {
     };
 
     // Hacer Premium
-    const hacerPremium = (): void => {
+    const hacerPremium = async (): Promise<void> => {
         if (!nick.trim()) {
             setMensaje("❌ Ingresa un nick válido");
             return;
         }
 
         try {
-            const fechaExpiracion = new Date();
-            fechaExpiracion.setFullYear(fechaExpiracion.getFullYear() + 1);
+            const response = await fetch('/api/premium', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'activate', nick })
+            });
 
-            const premiumData = {
-                activo: true,
-                fechaInicio: new Date().toISOString(),
-                expiracion: fechaExpiracion.toISOString(),
-                tipo: "anual",
-                precio: 12,
-                activadoPorAdmin: true,
-                beneficios: {
-                    perfil: "Avatar personalizado, marco dorado, efectos visuales",
-                    competencia: "Liga Premium exclusiva, eventos temáticos",
-                    aprendizaje: "Minijuegos Premium, pistas ilimitadas, historias Premium"
-                }
-            };
-
-            localStorage.setItem(`premium_${nick}`, JSON.stringify(premiumData));
-            setMensaje(`🎉 ¡Premium activado para ${nick} hasta ${fechaExpiracion.toLocaleDateString()}!`);
-
-            // Disparar eventos para actualizar componentes
-            window.dispatchEvent(new Event('storage'));
-            window.dispatchEvent(new CustomEvent('premiumUpdate', { detail: { nick: nick, action: 'add' } }));
-
+            const data = await response.json();
+            if (response.ok) {
+                setMensaje(`🎉 ${data.message}`);
+            } else {
+                setMensaje(`❌ ${data.error}`);
+            }
         } catch (error) {
             console.error('Error al activar premium:', error);
             setMensaje("❌ Error al activar Premium");
@@ -204,118 +192,103 @@ export default function AdminPremium() {
     };
 
     // Anular Premium
-    const anularPremium = (): void => {
+    const anularPremium = async (): Promise<void> => {
         if (!nick.trim()) {
             setMensaje("❌ Ingresa un nick válido");
             return;
         }
 
         try {
-            localStorage.removeItem(`premium_${nick}`);
-            setMensaje(`🗑️ Premium anulado para ${nick}`);
+            const response = await fetch('/api/premium', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'deactivate', nick })
+            });
 
-            // Disparar eventos para actualizar componentes
-            window.dispatchEvent(new Event('storage'));
-            window.dispatchEvent(new CustomEvent('premiumUpdate', { detail: { nick, action: 'remove' } }));
-
+            const data = await response.json();
+            if (response.ok) {
+                setMensaje(`🗑️ ${data.message}`);
+            } else {
+                setMensaje(`❌ ${data.error}`);
+            }
         } catch (error) {
             console.error('Error al anular premium:', error);
             setMensaje("❌ Error al anular Premium");
         }
     };
 
-    const activarPremium = (): void => {
+    const activarPremium = async (): Promise<void> => {
         if (!nick.trim()) {
             setMensaje("❌ Ingresa un nick válido");
             return;
         }
 
         try {
-            // Verificar si ya tiene premium activo
-            const premiumExistente = localStorage.getItem(`premium_${nick}`);
-            let fechaExpiracion = new Date();
-            let tiempoRestante = 0;
+            const response = await fetch('/api/premium', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'activate', nick })
+            });
 
-            if (premiumExistente) {
-                const premiumData = JSON.parse(premiumExistente);
-                const fechaExpiracionExistente = new Date(premiumData.expiracion);
-                const ahora = new Date();
-
-                if (fechaExpiracionExistente > ahora) {
-                    // Calcular días restantes de premium existente
-                    tiempoRestante = Math.ceil((fechaExpiracionExistente.getTime() - ahora.getTime()) / (1000 * 60 * 60 * 24));
-                }
+            const data = await response.json();
+            if (response.ok) {
+                setMensaje(`🎉 ¡Premium activado exitosamente para ${nick}!`);
+            } else {
+                setMensaje(`❌ ${data.error}`);
             }
-
-            // Establecer nueva fecha de expiración: 1 año + tiempo restante
-            fechaExpiracion.setFullYear(fechaExpiracion.getFullYear() + 1);
-            fechaExpiracion.setDate(fechaExpiracion.getDate() + tiempoRestante);
-
-            const premiumData = {
-                activo: true,
-                fechaInicio: new Date().toISOString(),
-                expiracion: fechaExpiracion.toISOString(),
-                tipo: "anual",
-                precio: 12,
-                activadoPorAdmin: true,
-                tiempoRestanteExtendido: tiempoRestante > 0,
-                beneficios: {
-                    perfil: "Avatar personalizado, marco dorado, efectos visuales",
-                    competencia: "Liga Premium exclusiva, eventos temáticos",
-                    aprendizaje: "Minijuegos Premium, pistas ilimitadas, historias Premium"
-                }
-            };
-
-            localStorage.setItem(`premium_${nick}`, JSON.stringify(premiumData));
-
-            const mensajeExtendido = tiempoRestante > 0
-                ? `\n\n⏰ Se ha añadido 1 año al tiempo restante de tu premium anterior (${tiempoRestante} días).`
-                : '';
-
-            setMensaje(`🎉 ¡Premium activado exitosamente para ${nick}!\n\nVálido hasta: ${fechaExpiracion.toLocaleDateString()}\nBeneficios: Liga Premium Exclusiva, Estadísticas Avanzadas, Avatares Especiales y más.${mensajeExtendido}`);
-
-            // Disparar eventos para actualizar componentes
-            window.dispatchEvent(new Event('storage'));
-            window.dispatchEvent(new CustomEvent('premiumUpdate', { detail: { nick, action: 'add' } }));
-
         } catch (error) {
             console.error('Error al activar Premium:', error);
             setMensaje("❌ Error al activar Premium. Inténtalo de nuevo.");
         }
     };
 
-    const verificarPremium = (): void => {
+    const verificarPremium = async (): Promise<void> => {
         if (!nick.trim()) {
             setMensaje("❌ Ingresa un nick válido");
             return;
         }
 
         try {
-            const premiumInfo = localStorage.getItem(`premium_${nick}`);
-            if (premiumInfo) {
-                const premium = JSON.parse(premiumInfo);
-                if (new Date(premium.expiracion) > new Date()) {
-                    setMensaje(`✅ ${nick} tiene Premium ACTIVO hasta: ${new Date(premium.expiracion).toLocaleDateString()}`);
+            const response = await fetch('/api/premium', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'check', nick })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                if (data.premium) {
+                    setMensaje(`✅ ${nick} tiene Premium ACTIVO`);
                 } else {
-                    setMensaje(`❌ ${nick} tenía Premium pero ha EXPIRADO el: ${new Date(premium.expiracion).toLocaleDateString()}`);
+                    setMensaje(`❌ ${nick} NO tiene Premium activado`);
                 }
             } else {
-                setMensaje(`❌ ${nick} NO tiene Premium activado`);
+                setMensaje(`❌ ${data.error}`);
             }
         } catch (error) {
             setMensaje("❌ Error al verificar Premium");
         }
     };
 
-    const desactivarPremium = (): void => {
+    const desactivarPremium = async (): Promise<void> => {
         if (!nick.trim()) {
             setMensaje("❌ Ingresa un nick válido");
             return;
         }
 
         try {
-            localStorage.removeItem(`premium_${nick}`);
-            setMensaje(`🗑️ Premium desactivado para ${nick}`);
+            const response = await fetch('/api/premium', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'deactivate', nick })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                setMensaje(`🗑️ ${data.message}`);
+            } else {
+                setMensaje(`❌ ${data.error}`);
+            }
         } catch (error) {
             setMensaje("❌ Error al desactivar Premium");
         }
