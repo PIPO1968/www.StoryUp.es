@@ -422,7 +422,7 @@ export default function AprendeConPipo() {
     }
 
     if (modoTorneoManual) {
-        return <TournamentQuiz userGrade={cursoUsuario} onTournamentComplete={handleTournamentComplete} />;
+        return <TournamentQuiz userGrade={parseInt(cursoUsuario) || 1} onTournamentComplete={handleTournamentComplete} />;
     }
 
     return (
