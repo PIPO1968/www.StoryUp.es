@@ -23,12 +23,12 @@ export async function POST(request: NextRequest) {
         // Crear usuario
         const user = await prisma.user.create({
             data: {
-                nombre,
+                nombre: nombre || null,
                 nick,
-                centro,
-                curso,
+                centro: centro || null,
+                curso: curso || null,
                 tipo: tipo || 'estudiante',
-                email,
+                email: email || null,
                 password: hashedPassword,
                 fechaInscripcion: new Date(),
                 likes: 0,
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
                 historiasCreadas: 0,
                 anosEnStoryUp: 0,
                 premium: false
-            }
+            } as any
         });
 
         return NextResponse.json({ message: 'Usuario registrado exitosamente', user: { id: user.id, nick: user.nick } });
