@@ -1,0 +1,166 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  nick      String   @unique
+  email     String?
+  password  String?
+  avatar    String?
+  premium   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  historias     Historia[]
+  noticias      Noticia[]
+  amigos        Amigo[]
+  chat          Chat[]
+  campeonatos   Campeonato[]
+  concursos     Concurso[]
+  solicitudes   SolicitudPremium[]
+  sesiones      SesionUsuario[]
+
+  @@map("users")
+}
+
+model Historia {
+  id          Int      @id @default(autoincrement())
+  titulo      String
+  contenido   String
+  autorId     Int
+  autor       User     @relation(fields: [autorId], references: [id])
+  likes       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("historias")
+}
+
+model Noticia {
+  id          Int      @id @default(autoincrement())
+  titulo      String
+  contenido   String
+  autorId     Int
+  autor       User     @relation(fields: [autorId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("noticias")
+}
+
+model Amigo {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  amigoId   Int
+  user      User     @relation(fields: [userId], references: [id])
+  amigo     User     @relation(fields: [amigoId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@map("amigos")
+}
+
+model Chat {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  mensaje   String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@map("chat")
+}
+
+model Campeonato {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  descripcion String?
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@map("campeonatos")
+}
+
+model Concurso {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  descripcion String?
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@map("concursos")
+}
+
+model SolicitudPremium {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  estado      String   @default("pendiente")
+  createdAt   DateTime @default(now())
+
+  @@map("solicitudes_premium")
+}
+
+model SesionUsuario {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@map("sesiones_usuario")
+}
+
+model Configuracion {
+  id    Int    @id @default(autoincrement())
+  clave String @unique
+  valor String
+
+  @@map("configuracion")
+}
+
+model PalabraProhibida {
+  id      Int    @id @default(autoincrement())
+  palabra String @unique
+
+  @@map("palabras_prohibidas")
+}
+
+model PremioMensual {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  premio      String
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@map("premios_mensuales")
+}
+
+// Modelo para preguntas (basado en tus JSON)
+model Pregunta {
+  id        Int     @id @default(autoincrement())
+  pregunta  String
+  respuesta String
+  categoria String
+  curso     String  // ej. "1primaria"
+  asignatura String // ej. "matematicas"
+}
+
+// Modelo para trofeos (basado en tus JSON)
+model Trofeo {
+  id          Int     @id @default(autoincrement())
+  imagen      String
+  titulo      String
+  descripcion String
+  criterio    String
+}
