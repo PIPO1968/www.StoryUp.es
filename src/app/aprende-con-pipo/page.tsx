@@ -337,27 +337,6 @@ export default function AprendeConPipo() {
         setPreguntasUsadas([...preguntasUsadas, preguntaSeleccionada.pregunta]);
     }
 
-    {/* Tabla Docentes */ }
-    <div className="mt-8">
-        <h2 className="text-xl font-bold mb-2">Ranking Docentes</h2>
-        <table className="w-full border mb-4" style={{ backgroundColor: '#fffbe6' }}>
-            <thead>
-                <tr style={{ backgroundColor: '#fff9c4' }}>
-                    <th className="p-2">Docente</th>
-                    <th className="p-2">Likes</th>
-                </tr>
-            </thead>
-            <tbody>
-                {Object.entries(tablaDocentes).map(([nick, likes]) => (
-                    <tr key={nick}>
-                        <td className="border p-2">{nick}</td>
-                        <td className="border p-2">{likes}</td>
-                    </tr>
-                ))}
-            </tbody>
-        </table>
-    </div>
-
     async function comprobarRespuesta() {
         if (bloqueado) return;
         let likesDelta = 0;
@@ -579,6 +558,27 @@ export default function AprendeConPipo() {
                                 </div>
                             )}
                             {feedback && !preguntaActual && <div className="mt-2 font-bold text-red-600">{feedback}</div>}
+
+                            {/* Tabla Docentes */}
+                            <div className="mt-8">
+                                <h2 className="text-xl font-bold mb-2">Ranking Docentes</h2>
+                                <table className="w-full border mb-4" style={{ backgroundColor: '#fffbe6' }}>
+                                    <thead>
+                                        <tr style={{ backgroundColor: '#fff9c4' }}>
+                                            <th className="p-2">Docente</th>
+                                            <th className="p-2">Likes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {Object.entries(tablaDocentes).map(([nick, likes]) => (
+                                            <tr key={nick}>
+                                                <td className="border p-2">{nick}</td>
+                                                <td className="border p-2">{likes}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </>
                     ) : (
                         <div className="mt-4">
