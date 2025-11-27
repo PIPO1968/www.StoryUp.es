@@ -22,8 +22,14 @@ const cursos = [
 const RegisterLoginForm = ()=>{
     const [isRegister, setIsRegister] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(true);
     __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].useEffect(()=>{
-        if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
-        ;
+        // Verificar si el usuario está logueado
+        fetch('/api/auth/me').then((response)=>response.json()).then((data)=>{
+            if (data.user) {
+                window.location.href = "/perfil";
+            }
+        }).catch(()=>{
+        // No está logueado, mostrar formulario
+        });
     }, []);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "max-w-md mx-auto bg-white shadow rounded p-6 mt-8",
@@ -37,7 +43,7 @@ const RegisterLoginForm = ()=>{
                         children: "Registro"
                     }, void 0, false, {
                         fileName: "[project]/src/components/RegisterLoginForm.tsx",
-                        lineNumber: 23,
+                        lineNumber: 28,
                         columnNumber: 17
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -46,17 +52,17 @@ const RegisterLoginForm = ()=>{
                         children: "Login"
                     }, void 0, false, {
                         fileName: "[project]/src/components/RegisterLoginForm.tsx",
-                        lineNumber: 24,
+                        lineNumber: 29,
                         columnNumber: 17
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/RegisterLoginForm.tsx",
-                lineNumber: 22,
+                lineNumber: 27,
                 columnNumber: 13
             }, ("TURBOPACK compile-time value", void 0)),
             isRegister ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("form", {
-                onSubmit: (e)=>{
+                onSubmit: async (e)=>{
                     e.preventDefault();
                     const formData = new FormData(e.target);
                     const userData = {
@@ -66,29 +72,25 @@ const RegisterLoginForm = ()=>{
                         curso: formData.get('curso'),
                         tipo: formData.get('tipo'),
                         email: formData.get('email'),
-                        password: formData.get('password'),
-                        linkPerfil: `/perfil/${formData.get('nick')}`,
-                        fechaInscripcion: new Date().toISOString(),
-                        textoFechaInscripcion: `En StoryUp desde: ${new Date().toLocaleDateString('es-ES')}`,
-                        likes: 0,
-                        amigos: [],
-                        historias: [],
-                        comentarios: []
+                        password: formData.get('password')
                     };
-                    let usersArr = [];
-                    const usersStr = localStorage.getItem("users");
-                    if (usersStr) {
-                        try {
-                            usersArr = JSON.parse(usersStr);
-                        } catch  {}
-                    }
-                    if (!usersArr.some((u)=>u.email === userData.email)) {
-                        usersArr.push(userData);
-                        localStorage.setItem("users", JSON.stringify(usersArr));
-                        localStorage.setItem("user", JSON.stringify(userData));
-                        window.location.href = '/perfil';
-                    } else {
-                        alert("Este email ya está registrado. Por favor, inicia sesión.");
+                    try {
+                        const response = await fetch('/api/auth/register', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(userData)
+                        });
+                        const data = await response.json();
+                        if (data.error) {
+                            alert(data.error);
+                        } else {
+                            // Usuario registrado y logueado automáticamente (cookie set)
+                            window.location.href = '/perfil';
+                        }
+                    } catch (error) {
+                        alert('Error en el registro');
                     }
                 },
                 children: [
@@ -255,47 +257,46 @@ const RegisterLoginForm = ()=>{
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/RegisterLoginForm.tsx",
-                lineNumber: 27,
+                lineNumber: 32,
                 columnNumber: 17
             }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("form", {
-                onSubmit: (e)=>{
+                onSubmit: async (e)=>{
                     e.preventDefault();
                     const formData = new FormData(e.target);
-                    const email = formData.get('email');
+                    const nick = formData.get('nick');
                     const password = formData.get('password');
-                    let usersArr = [];
-                    const usersStr = localStorage.getItem("users");
-                    if (usersStr) {
-                        try {
-                            usersArr = JSON.parse(usersStr);
-                        } catch  {}
-                    }
-                    const user = usersArr.find((u)=>u.email === email);
-                    if (user) {
-                        if (!user.password) {
-                            alert("Este usuario no tiene contraseña guardada. Por favor, regístrate de nuevo.");
-                            return;
-                        }
-                        if (user.password === password) {
-                            localStorage.setItem("user", JSON.stringify(user));
-                            window.location.href = '/perfil';
+                    try {
+                        const response = await fetch('/api/auth/login', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                nick,
+                                password
+                            })
+                        });
+                        const data = await response.json();
+                        if (data.error) {
+                            alert(data.error);
                         } else {
-                            alert("Contraseña incorrecta");
+                            // Usuario logueado (cookie set)
+                            window.location.href = '/perfil';
                         }
-                    } else {
-                        alert("Email no encontrado. Por favor, regístrate.");
+                    } catch (error) {
+                        alert('Error en el login');
                     }
                 },
                 children: [
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
-                        type: "email",
-                        name: "email",
-                        placeholder: "Email",
+                        type: "text",
+                        name: "nick",
+                        placeholder: "Nick",
                         className: "w-full mb-2 p-2 border rounded",
                         required: true
                     }, void 0, false, {
                         fileName: "[project]/src/components/RegisterLoginForm.tsx",
-                        lineNumber: 117,
+                        lineNumber: 110,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -306,7 +307,7 @@ const RegisterLoginForm = ()=>{
                         required: true
                     }, void 0, false, {
                         fileName: "[project]/src/components/RegisterLoginForm.tsx",
-                        lineNumber: 118,
+                        lineNumber: 111,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -315,7 +316,7 @@ const RegisterLoginForm = ()=>{
                         children: "Iniciar sesión"
                     }, void 0, false, {
                         fileName: "[project]/src/components/RegisterLoginForm.tsx",
-                        lineNumber: 119,
+                        lineNumber: 112,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
@@ -327,7 +328,7 @@ const RegisterLoginForm = ()=>{
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/RegisterLoginForm.tsx",
-        lineNumber: 21,
+        lineNumber: 26,
         columnNumber: 9
     }, ("TURBOPACK compile-time value", void 0));
 };
@@ -423,12 +424,69 @@ const ChampionshipQuiz = ({ userGrade, userSchool })=>{
     const [preguntasUsadas, setPreguntasUsadas] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].useState([]);
     const [timeLeft, setTimeLeft] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].useState(300); // 5 minutos
     const [bloqueado, setBloqueado] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].useState(false);
+    const [currentUser, setCurrentUser] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].useState(null);
+    const [sessionResponses, setSessionResponses] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].useState([]);
+    // Cargar usuario actual al montar el componente
+    __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].useEffect(()=>{
+        const loadUser = async ()=>{
+            try {
+                const response = await fetch('/api/auth/me');
+                if (response.ok) {
+                    const user = await response.json();
+                    setCurrentUser(user);
+                }
+            } catch (error) {
+                console.error('Error loading user:', error);
+            }
+        };
+        loadUser();
+    }, []);
+    // Función para actualizar likes del usuario
+    const updateUserLikes = async (likesDelta)=>{
+        if (!currentUser) return;
+        try {
+            const response = await fetch('/api/user/update-likes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    likesDelta
+                })
+            });
+            if (response.ok) {
+                const updatedUser = await response.json();
+                setCurrentUser(updatedUser);
+                // Emitir evento para refrescar perfil
+                window.dispatchEvent(new Event('profileUpdate'));
+            }
+        } catch (error) {
+            console.error('Error updating likes:', error);
+        }
+    };
+    // Función para actualizar estadísticas de campeonato
+    const updateChampionshipStats = async (stats)=>{
+        try {
+            const response = await fetch('/api/stats/championship', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(stats)
+            });
+            if (!response.ok) {
+                console.error('Error updating championship stats');
+            }
+        } catch (error) {
+            console.error('Error updating championship stats:', error);
+        }
+    };
     __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].useEffect(()=>{
         if (!preguntaActual || bloqueado) return;
         if (timeLeft === 0) {
             setBloqueado(true);
             setFeedback("⏰ Tiempo agotado. No puedes responder esta pregunta. -3 likes");
-            // Aquí podrías actualizar los likes en localStorage si lo deseas
+            updateUserLikes(-3);
             return;
         }
         const timer = setTimeout(()=>setTimeLeft(timeLeft - 1), 1000);
@@ -476,90 +534,34 @@ const ChampionshipQuiz = ({ userGrade, userSchool })=>{
             setRespuestaCorrecta("");
             setFeedback("¡Has completado las 25 preguntas del campeonato!");
             setBloqueado(true);
-            // Calcular estadísticas de la sesión
-            const userStr = ("TURBOPACK compile-time falsy", 0) ? "TURBOPACK unreachable" : null;
-            let nick = "";
-            let centro = "";
-            let curso = "";
-            if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
-            ;
-            // (Ya declaradas arriba)
-            // Recuperar respuestas y likes
-            const respuestasStr = localStorage.getItem(`respuestas_campeonato_${nick}`);
-            let respuestasArr = respuestasStr ? JSON.parse(respuestasStr) : [];
-            // Contar acertadas y falladas de la sesión
-            const acertadasSesion = respuestasArr.filter((r)=>r.correcta).length;
-            const falladasSesion = respuestasArr.filter((r)=>!r.correcta).length;
-            const likesSesion = respuestasArr.reduce((sum, r)=>sum + (r.likes || 0), 0);
-            // Temporada actual: formato tYYYY (declarar antes de cualquier uso)
-            const now = new Date();
-            let temporada = now.getFullYear();
-            if (now.getMonth() + 1 >= 10) temporada += 1;
-            const temporadaKey = `t${temporada}`;
-            // Solo se considera ganada si acierta más de 12
-            const ganadoSesion = acertadasSesion > 12 ? 1 : 0;
-            const perdidoSesion = acertadasSesion <= 12 ? 1 : 0;
-            // Sumar acumulado de la temporada
-            const keyIndividual = `campeonato_individual_${temporadaKey}`;
-            let tablaIndividual = {};
-            try {
-                tablaIndividual = JSON.parse(localStorage.getItem(keyIndividual) || '{}');
-            } catch  {
-                tablaIndividual = {};
-            }
-            let acertadas = acertadasSesion;
-            let falladas = falladasSesion;
-            let likes = likesSesion;
-            let ganado = ganadoSesion;
-            let perdido = perdidoSesion;
-            if (tablaIndividual[nick]) {
-                acertadas += tablaIndividual[nick].acertadas || 0;
-                falladas += tablaIndividual[nick].falladas || 0;
-                likes += tablaIndividual[nick].likes || 0;
-                ganado += tablaIndividual[nick].ganado || 0;
-                perdido += tablaIndividual[nick].perdido || 0;
-            }
-            // (Ya declaradas arriba)
-            // Guardar datos según tipo de usuario
-            if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
-            ;
-            // Guardar datos CENTROS
-            const keyCentros = `campeonato_centros_${temporadaKey}`;
-            let tablaCentros = {};
-            try {
-                tablaCentros = JSON.parse(localStorage.getItem(keyCentros) || '{}');
-            } catch  {
-                tablaCentros = {};
-            }
-            if (centro) {
-                if (!tablaCentros[centro]) tablaCentros[centro] = {
-                    ganados: 0,
-                    perdidos: 0,
-                    preguntasAcertadas: 0,
-                    preguntasFalladas: 0,
-                    likes: 0
+            // Calcular estadísticas de la sesión y enviar a API
+            if (currentUser) {
+                const now = new Date();
+                let temporada = now.getFullYear();
+                if (now.getMonth() + 1 >= 10) temporada += 1;
+                const temporadaKey = `t${temporada}`;
+                // Calcular de las respuestas de la sesión
+                const acertadasSesion = sessionResponses.filter((r)=>r.correcta).length;
+                const falladasSesion = sessionResponses.filter((r)=>!r.correcta).length;
+                const likesSesion = sessionResponses.reduce((sum, r)=>sum + (r.likes || 0), 0);
+                const ganadoSesion = acertadasSesion > 12 ? 1 : 0;
+                const perdidoSesion = acertadasSesion <= 12 ? 1 : 0;
+                const stats = {
+                    nick: currentUser.nick,
+                    centro: currentUser.centro,
+                    curso: currentUser.curso,
+                    temporada: temporadaKey,
+                    acertadas: acertadasSesion,
+                    falladas: falladasSesion,
+                    likes: likesSesion,
+                    ganado: ganadoSesion,
+                    perdido: perdidoSesion,
+                    tipo: currentUser.tipo
                 };
-                tablaCentros[centro].ganados += ganado;
-                tablaCentros[centro].perdidos += perdido;
-                tablaCentros[centro].preguntasAcertadas += acertadas;
-                tablaCentros[centro].preguntasFalladas += falladas;
-                tablaCentros[centro].likes += likes;
+                updateChampionshipStats(stats);
+                // Resetear respuestas de sesión para próxima partida
+                setSessionResponses([]);
             }
-            localStorage.setItem(keyCentros, JSON.stringify(tablaCentros));
-            // Guardar datos DOCENTES
-            const keyDocentes = `campeonato_docentes_${temporadaKey}`;
-            let tablaDocentes = {};
-            try {
-                tablaDocentes = JSON.parse(localStorage.getItem(keyDocentes) || '{}');
-            } catch  {
-                tablaDocentes = {};
-            }
-            if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
-            ;
-            localStorage.setItem(keyDocentes, JSON.stringify(tablaDocentes));
-            // Guardar también en el perfil del usuario
-            if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
-            ;
             return;
         }
         setTimeLeft(300);
@@ -598,8 +600,21 @@ const ChampionshipQuiz = ({ userGrade, userSchool })=>{
             setFeedback(`Incorrecto. La respuesta era: ${respuestaCorrecta}`);
             likesDelta = timeLeft > 120 ? -1 : -2;
         }
-        if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
-        ;
+        // Actualizar likes
+        updateUserLikes(likesDelta);
+        // Guardar respuesta en el historial de sesión
+        const respuesta = {
+            pregunta: preguntaActual,
+            respuestaUsuario,
+            respuestaCorrecta,
+            correcta: esCorrecta,
+            tiempo: timeLeft,
+            likes: likesDelta
+        };
+        setSessionResponses((prev)=>[
+                ...prev,
+                respuesta
+            ]);
     }
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "p-4 bg-yellow-100 rounded-lg",
@@ -609,7 +624,7 @@ const ChampionshipQuiz = ({ userGrade, userSchool })=>{
                 children: "Modo Campeonato"
             }, void 0, false, {
                 fileName: "[project]/src/components/ChampionshipQuiz.tsx",
-                lineNumber: 252,
+                lineNumber: 183,
                 columnNumber: 13
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -620,7 +635,7 @@ const ChampionshipQuiz = ({ userGrade, userSchool })=>{
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/ChampionshipQuiz.tsx",
-                lineNumber: 253,
+                lineNumber: 184,
                 columnNumber: 13
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -630,7 +645,7 @@ const ChampionshipQuiz = ({ userGrade, userSchool })=>{
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/ChampionshipQuiz.tsx",
-                lineNumber: 254,
+                lineNumber: 185,
                 columnNumber: 13
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -639,7 +654,7 @@ const ChampionshipQuiz = ({ userGrade, userSchool })=>{
                 children: "Generar pregunta de campeonato"
             }, void 0, false, {
                 fileName: "[project]/src/components/ChampionshipQuiz.tsx",
-                lineNumber: 255,
+                lineNumber: 186,
                 columnNumber: 13
             }, ("TURBOPACK compile-time value", void 0)),
             preguntaActual && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -650,7 +665,7 @@ const ChampionshipQuiz = ({ userGrade, userSchool })=>{
                         children: preguntaActual
                     }, void 0, false, {
                         fileName: "[project]/src/components/ChampionshipQuiz.tsx",
-                        lineNumber: 260,
+                        lineNumber: 191,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -664,7 +679,7 @@ const ChampionshipQuiz = ({ userGrade, userSchool })=>{
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/ChampionshipQuiz.tsx",
-                        lineNumber: 261,
+                        lineNumber: 192,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -676,7 +691,7 @@ const ChampionshipQuiz = ({ userGrade, userSchool })=>{
                         disabled: bloqueado
                     }, void 0, false, {
                         fileName: "[project]/src/components/ChampionshipQuiz.tsx",
-                        lineNumber: 262,
+                        lineNumber: 193,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -686,7 +701,7 @@ const ChampionshipQuiz = ({ userGrade, userSchool })=>{
                         children: "Enviar respuesta"
                     }, void 0, false, {
                         fileName: "[project]/src/components/ChampionshipQuiz.tsx",
-                        lineNumber: 270,
+                        lineNumber: 201,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0)),
                     feedback && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -694,13 +709,13 @@ const ChampionshipQuiz = ({ userGrade, userSchool })=>{
                         children: feedback
                     }, void 0, false, {
                         fileName: "[project]/src/components/ChampionshipQuiz.tsx",
-                        lineNumber: 273,
+                        lineNumber: 204,
                         columnNumber: 34
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/ChampionshipQuiz.tsx",
-                lineNumber: 259,
+                lineNumber: 190,
                 columnNumber: 17
             }, ("TURBOPACK compile-time value", void 0)),
             feedback && !preguntaActual && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -708,13 +723,13 @@ const ChampionshipQuiz = ({ userGrade, userSchool })=>{
                 children: feedback
             }, void 0, false, {
                 fileName: "[project]/src/components/ChampionshipQuiz.tsx",
-                lineNumber: 276,
+                lineNumber: 207,
                 columnNumber: 45
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/ChampionshipQuiz.tsx",
-        lineNumber: 251,
+        lineNumber: 182,
         columnNumber: 9
     }, ("TURBOPACK compile-time value", void 0));
 };
@@ -792,7 +807,7 @@ function Home() {
         "Ravelo.jpg",
         "Rodriguez Alberto.jpg",
         "Rodriguez Campos.png",
-        "Saint Andrew,s.jpg",
+        "avatars/Saint Andrews.jpg",
         "Salesianas.jpg",
         "San Agustin.jpg",
         "San Fernando.jpg",
@@ -933,7 +948,7 @@ function Home() {
                 "Ravelo.jpg",
                 "Rodriguez Alberto.jpg",
                 "Rodriguez Campos.png",
-                "Saint Andrew,s.jpg",
+                "avatars/Saint Andrews.jpg",
                 "Salesianas.jpg",
                 "San Agustin.jpg",
                 "San Fernando.jpg",

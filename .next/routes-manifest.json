@@ -109,6 +109,18 @@
       "namedRegex": "^/api/auth/register(?:/)?$"
     },
     {
+      "page": "/api/friends",
+      "regex": "^/api/friends(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/friends(?:/)?$"
+    },
+    {
+      "page": "/api/premium",
+      "regex": "^/api/premium(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/premium(?:/)?$"
+    },
+    {
       "page": "/api/questions",
       "regex": "^/api/questions(?:/)?$",
       "routeKeys": {},
@@ -125,6 +137,30 @@
       "regex": "^/api/stats/championship(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/api/stats/championship(?:/)?$"
+    },
+    {
+      "page": "/api/stats/championship-table",
+      "regex": "^/api/stats/championship\\-table(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/stats/championship\\-table(?:/)?$"
+    },
+    {
+      "page": "/api/stats/championship-update",
+      "regex": "^/api/stats/championship\\-update(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/stats/championship\\-update(?:/)?$"
+    },
+    {
+      "page": "/api/stats/user",
+      "regex": "^/api/stats/user(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/stats/user(?:/)?$"
+    },
+    {
+      "page": "/api/torneos",
+      "regex": "^/api/torneos(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/torneos(?:/)?$"
     },
     {
       "page": "/api/user/increment-stat",

@@ -680,32 +680,56 @@ const I18nProvider = ({ children, defaultLang = "es" })=>{
     const [lang, setLang] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(defaultLang);
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "I18nProvider.useEffect": ()=>{
-            // Prefer saved localStorage language if available
-            if ("TURBOPACK compile-time truthy", 1) {
-                const saved = localStorage.getItem('locale');
-                if (saved && [
-                    'es',
-                    'en',
-                    'fr',
-                    'de'
-                ].includes(saved)) {
-                    setLang(saved);
-                    return;
+            const loadLanguage = {
+                "I18nProvider.useEffect.loadLanguage": async ()=>{
+                    try {
+                        // Intentar obtener idioma del usuario desde API
+                        const response = await fetch('/api/settings/language');
+                        const data = await response.json();
+                        if (data.language && [
+                            'es',
+                            'en',
+                            'fr',
+                            'de'
+                        ].includes(data.language)) {
+                            setLang(data.language);
+                            return;
+                        }
+                    } catch (error) {
+                        // No usar localStorage como fallback
+                        console.error('Error loading language:', error);
+                    }
+                    // Fallback a idioma del navegador
+                    if ("TURBOPACK compile-time truthy", 1) {
+                        const browser = navigator.language?.slice(0, 2);
+                        if (browser && (browser === "es" || browser === "en" || browser === "fr" || browser === "de")) {
+                            setLang(browser);
+                        }
+                    }
                 }
-                // Otherwise try browser language
-                const browser = navigator.language?.slice(0, 2);
-                if (browser && (browser === "es" || browser === "en" || browser === "fr" || browser === "de")) {
-                    setLang(browser);
-                }
-            }
+            }["I18nProvider.useEffect.loadLanguage"];
+            loadLanguage();
         }
     }["I18nProvider.useEffect"], []);
     const t = (key)=>{
         return translations[lang][key] || translations['es'][key] || key;
     };
-    const changeLang = (l)=>{
+    const changeLang = async (l)=>{
         setLang(l);
-        if ("TURBOPACK compile-time truthy", 1) localStorage.setItem('locale', l);
+        // Guardar en la API si el usuario está logueado
+        try {
+            await fetch('/api/settings/language', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    language: l
+                })
+            });
+        } catch (error) {
+        // Silently fail - no problem if not saved
+        }
     };
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(I18nContext.Provider, {
         value: {
@@ -716,7 +740,7 @@ const I18nProvider = ({ children, defaultLang = "es" })=>{
         children: children
     }, void 0, false, {
         fileName: "[project]/src/utils/i18n.tsx",
-        lineNumber: 648,
+        lineNumber: 668,
         columnNumber: 9
     }, ("TURBOPACK compile-time value", void 0));
 };
@@ -778,43 +802,44 @@ const Header = ()=>{
         }
     }["Header.useEffect"], []);
     const { lang, setLang, t } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$utils$2f$i18n$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useTranslation"])();
-    // Obtener usuario actual
+    // Obtener usuario actual y lista de usuarios
     const [user, setUser] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
     const [registeredUsers, setRegisteredUsers] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
     const [onlineUsers, setOnlineUsers] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
     const [isPremium, setIsPremium] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "Header.useEffect": ()=>{
-            if ("TURBOPACK compile-time truthy", 1) {
-                const usersStr = localStorage.getItem("users");
-                const userStr = localStorage.getItem("user");
-                let usersArr = [];
-                if (usersStr) {
-                    try {
-                        usersArr = JSON.parse(usersStr);
-                    } catch  {}
-                }
-                setRegisteredUsers(usersArr.length);
-                if (userStr) {
-                    const currentUser = JSON.parse(userStr);
-                    setUser(currentUser);
-                    // Verificar si el usuario actual es Premium
-                    const premiumInfo = localStorage.getItem(`premium_${currentUser.nick}`);
-                    if (premiumInfo) {
-                        try {
-                            const premium = JSON.parse(premiumInfo);
-                            if (new Date(premium.expiracion) > new Date()) {
-                                setIsPremium(true);
-                            }
-                        } catch  {
-                            setIsPremium(false);
-                        }
+            // Obtener usuario actual
+            fetch('/api/auth/me').then({
+                "Header.useEffect": (response)=>response.json()
+            }["Header.useEffect"]).then({
+                "Header.useEffect": (data)=>{
+                    if (data.user) {
+                        setUser(data.user);
+                        setIsPremium(data.user.premium || false);
+                        setOnlineUsers(1);
+                    } else {
+                        setOnlineUsers(0);
                     }
-                    setOnlineUsers(1);
-                } else {
+                }
+            }["Header.useEffect"]).catch({
+                "Header.useEffect": ()=>{
                     setOnlineUsers(0);
                 }
-            }
+            }["Header.useEffect"]);
+            // Obtener lista de usuarios
+            fetch('/api/users').then({
+                "Header.useEffect": (response)=>response.json()
+            }["Header.useEffect"]).then({
+                "Header.useEffect": (users)=>{
+                    setRegisteredUsers(users.length);
+                }
+            }["Header.useEffect"]).catch({
+                "Header.useEffect": (error)=>{
+                    console.warn('No se pudo cargar la lista de usuarios:', error);
+                    setRegisteredUsers(0);
+                }
+            }["Header.useEffect"]);
         }
     }["Header.useEffect"], []);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("header", {
@@ -829,7 +854,7 @@ const Header = ()=>{
                         className: "h-10 w-10"
                     }, void 0, false, {
                         fileName: "[project]/src/components/Header.tsx",
-                        lineNumber: 69,
+                        lineNumber: 64,
                         columnNumber: 17
                     }, ("TURBOPACK compile-time value", void 0)),
                     registeredUsers !== null && onlineUsers !== null ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -841,7 +866,7 @@ const Header = ()=>{
                                 children: registeredUsers
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Header.tsx",
-                                lineNumber: 71,
+                                lineNumber: 66,
                                 columnNumber: 44
                             }, ("TURBOPACK compile-time value", void 0)),
                             " | ",
@@ -852,19 +877,19 @@ const Header = ()=>{
                                 children: onlineUsers
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Header.tsx",
-                                lineNumber: 71,
+                                lineNumber: 66,
                                 columnNumber: 114
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Header.tsx",
-                        lineNumber: 71,
+                        lineNumber: 66,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                         children: t("cargandoUsuarios")
                     }, void 0, false, {
                         fileName: "[project]/src/components/Header.tsx",
-                        lineNumber: 73,
+                        lineNumber: 68,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0)),
                     user && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -878,19 +903,19 @@ const Header = ()=>{
                                 children: "👑"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Header.tsx",
-                                lineNumber: 79,
+                                lineNumber: 74,
                                 columnNumber: 29
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Header.tsx",
-                        lineNumber: 76,
+                        lineNumber: 71,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/Header.tsx",
-                lineNumber: 68,
+                lineNumber: 63,
                 columnNumber: 13
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -900,12 +925,12 @@ const Header = ()=>{
                     children: dateTime
                 }, void 0, false, {
                     fileName: "[project]/src/components/Header.tsx",
-                    lineNumber: 91,
+                    lineNumber: 86,
                     columnNumber: 17
                 }, ("TURBOPACK compile-time value", void 0))
             }, void 0, false, {
                 fileName: "[project]/src/components/Header.tsx",
-                lineNumber: 90,
+                lineNumber: 85,
                 columnNumber: 13
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -918,7 +943,7 @@ const Header = ()=>{
                         children: t("miPremium")
                     }, void 0, false, {
                         fileName: "[project]/src/components/Header.tsx",
-                        lineNumber: 97,
+                        lineNumber: 92,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                         className: "bg-gradient-to-r from-yellow-500 to-amber-600 text-white px-4 py-2 rounded-full font-bold text-sm hover:shadow-lg transform hover:scale-105 transition-all duration-200",
@@ -927,7 +952,7 @@ const Header = ()=>{
                         children: t("haztePremium")
                     }, void 0, false, {
                         fileName: "[project]/src/components/Header.tsx",
-                        lineNumber: 105,
+                        lineNumber: 100,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0)),
                     user && user.nick === 'PIPO68' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -937,7 +962,7 @@ const Header = ()=>{
                         children: t("admin")
                     }, void 0, false, {
                         fileName: "[project]/src/components/Header.tsx",
-                        lineNumber: 116,
+                        lineNumber: 111,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -951,7 +976,7 @@ const Header = ()=>{
                                 children: t("espanol")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Header.tsx",
-                                lineNumber: 131,
+                                lineNumber: 126,
                                 columnNumber: 21
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -959,7 +984,7 @@ const Header = ()=>{
                                 children: t("ingles")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Header.tsx",
-                                lineNumber: 132,
+                                lineNumber: 127,
                                 columnNumber: 21
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -967,7 +992,7 @@ const Header = ()=>{
                                 children: t("frances")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Header.tsx",
-                                lineNumber: 133,
+                                lineNumber: 128,
                                 columnNumber: 21
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -975,40 +1000,39 @@ const Header = ()=>{
                                 children: t("aleman")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Header.tsx",
-                                lineNumber: 134,
+                                lineNumber: 129,
                                 columnNumber: 21
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Header.tsx",
-                        lineNumber: 125,
+                        lineNumber: 120,
                         columnNumber: 17
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                         className: "bg-red-500 text-white px-3 py-1 rounded",
-                        onClick: ()=>{
-                            if ("TURBOPACK compile-time truthy", 1) {
-                                localStorage.removeItem('user');
-                                localStorage.removeItem('token');
-                            }
+                        onClick: async ()=>{
+                            await fetch('/api/auth/logout', {
+                                method: 'POST'
+                            });
                             window.location.href = '/';
                         },
                         children: t("cerrarSesion")
                     }, void 0, false, {
                         fileName: "[project]/src/components/Header.tsx",
-                        lineNumber: 136,
+                        lineNumber: 131,
                         columnNumber: 17
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/Header.tsx",
-                lineNumber: 94,
+                lineNumber: 89,
                 columnNumber: 13
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/Header.tsx",
-        lineNumber: 66,
+        lineNumber: 61,
         columnNumber: 9
     }, ("TURBOPACK compile-time value", void 0));
 };
@@ -1088,30 +1112,38 @@ const Sidebar = ()=>{
     const [user, setUser] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "Sidebar.useEffect": ()=>{
-            if ("TURBOPACK compile-time truthy", 1) {
-                const userStr = localStorage.getItem("user");
-                if (userStr) setUser(JSON.parse(userStr));
-            }
+            const loadUser = {
+                "Sidebar.useEffect.loadUser": async ()=>{
+                    try {
+                        const response = await fetch('/api/auth/me');
+                        if (response.ok) {
+                            const data = await response.json();
+                            setUser(data.user);
+                        }
+                    } catch (error) {
+                        console.error('Error loading user:', error);
+                    }
+                }
+            }["Sidebar.useEffect.loadUser"];
+            loadUser();
         }
     }["Sidebar.useEffect"], []);
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "Sidebar.useEffect": ()=>{
-            if ("TURBOPACK compile-time truthy", 1) {
-                // Cargar usuarios inscritos desde localStorage
-                const usersStr = localStorage.getItem("users");
-                if (usersStr) {
+            const loadUsers = {
+                "Sidebar.useEffect.loadUsers": async ()=>{
                     try {
-                        const usersArr = JSON.parse(usersStr);
-                        setUsuarios(usersArr);
-                    } catch  {}
+                        const response = await fetch('/api/users');
+                        if (response.ok) {
+                            const users = await response.json();
+                            setUsuarios(users);
+                        }
+                    } catch (error) {
+                        console.error('Error loading users:', error);
+                    }
                 }
-                // Mantener la lógica de mensajes no leídos si es necesario
-                const currentUser = localStorage.getItem("user");
-                if (currentUser) {
-                    const user = JSON.parse(currentUser);
-                // Aquí podrías agregar la lógica de mensajes si la necesitas
-                }
-            }
+            }["Sidebar.useEffect.loadUsers"];
+            loadUsers();
         }
     }["Sidebar.useEffect"], []);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
@@ -1128,20 +1160,20 @@ const Sidebar = ()=>{
                                 children: link.label
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Sidebar.tsx",
-                                lineNumber: 54,
+                                lineNumber: 58,
                                 columnNumber: 25
                             }, ("TURBOPACK compile-time value", void 0)),
                             link.href === '/perfil' && unreadMessages && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full animate-pulse"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Sidebar.tsx",
-                                lineNumber: 58,
+                                lineNumber: 62,
                                 columnNumber: 29
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, link.href, true, {
                         fileName: "[project]/src/components/Sidebar.tsx",
-                        lineNumber: 53,
+                        lineNumber: 57,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0))),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
@@ -1155,7 +1187,7 @@ const Sidebar = ()=>{
                                 children: "Buscar Usuario:"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Sidebar.tsx",
-                                lineNumber: 65,
+                                lineNumber: 69,
                                 columnNumber: 25
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -1172,7 +1204,7 @@ const Sidebar = ()=>{
                                         children: "Selecciona un usuario"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/Sidebar.tsx",
-                                        lineNumber: 74,
+                                        lineNumber: 78,
                                         columnNumber: 29
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     usuarios.filter((u, i, arr)=>arr.findIndex((x)=>x.nick === u.nick) === i).sort((a, b)=>a.nick.localeCompare(b.nick)).map((u)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1180,24 +1212,24 @@ const Sidebar = ()=>{
                                             children: u.nick
                                         }, u.nick, false, {
                                             fileName: "[project]/src/components/Sidebar.tsx",
-                                            lineNumber: 79,
+                                            lineNumber: 83,
                                             columnNumber: 37
                                         }, ("TURBOPACK compile-time value", void 0)))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/Sidebar.tsx",
-                                lineNumber: 66,
+                                lineNumber: 70,
                                 columnNumber: 25
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Sidebar.tsx",
-                        lineNumber: 64,
+                        lineNumber: 68,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0))
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar.tsx",
-                    lineNumber: 63,
+                    lineNumber: 67,
                     columnNumber: 17
                 }, ("TURBOPACK compile-time value", void 0)),
                 user?.tipo === "docente" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
@@ -1213,29 +1245,29 @@ const Sidebar = ()=>{
                                 children: "ℹ️"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Sidebar.tsx",
-                                lineNumber: 91,
+                                lineNumber: 95,
                                 columnNumber: 39
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Sidebar.tsx",
-                        lineNumber: 87,
+                        lineNumber: 91,
                         columnNumber: 25
                     }, ("TURBOPACK compile-time value", void 0))
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar.tsx",
-                    lineNumber: 86,
+                    lineNumber: 90,
                     columnNumber: 21
                 }, ("TURBOPACK compile-time value", void 0))
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/Sidebar.tsx",
-            lineNumber: 51,
+            lineNumber: 55,
             columnNumber: 13
         }, ("TURBOPACK compile-time value", void 0))
     }, void 0, false, {
         fileName: "[project]/src/components/Sidebar.tsx",
-        lineNumber: 50,
+        lineNumber: 54,
         columnNumber: 9
     }, ("TURBOPACK compile-time value", void 0));
 };

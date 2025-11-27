@@ -48,6 +48,8 @@ model User {
   solicitudes   SolicitudPremium[]
   sesiones      SesionUsuario[]
   premios       PremioMensual[]
+  torneosGanados Torneo[] @relation("torneosGanados")
+  stats         UserStats?
 
   @@map("users")
 }
@@ -163,6 +165,37 @@ model PremioMensual {
   createdAt   DateTime @default(now())
 
   @@map("premios_mensuales")
+}
+
+model Torneo {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  descripcion String?
+  tipo        String   // "mensual", "especial", etc.
+  curso       String
+  fechaInicio DateTime
+  fechaFin    DateTime
+  estado      String   @default("activo") // "activo", "finalizado"
+  ganadorId   Int?
+  ganador     User?    @relation("torneosGanados", fields: [ganadorId], references: [id])
+  resultados  Json?    // Array de {nick, aciertos, puntuacion}
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("torneos")
+}
+
+model UserStats {
+  id                  Int     @id @default(autoincrement())
+  userId              Int     @unique
+  user                User    @relation(fields: [userId], references: [id])
+  respuestasAcertadas Int     @default(0)
+  preguntasFalladas   Int     @default(0)
+  victoriasTorneos    Int     @default(0)
+  participacionesTorneos Int  @default(0)
+  puntuacionTotal     Int     @default(0)
+
+  @@map("user_stats")
 }
 
 // Modelo para preguntas (basado en tus JSON)
