@@ -843,7 +843,7 @@ export default function CentrosCompetencia() {
 
     // Cargar datos y calcular estadísticas
     useEffect(() => {
-        const cargarDatos = () => {
+        const cargarDatos = async () => {
             try {
                 // Cargar usuario actual
                 const userData = localStorage.getItem('currentUser') || localStorage.getItem('user');
@@ -860,15 +860,20 @@ export default function CentrosCompetencia() {
                 const historialGanadores = obtenerHistorialGanadores();
                 setHistorialGanadores(historialGanadores);
 
-                // Cargar todos los usuarios
-                const usuariosData = localStorage.getItem('users');
-                if (!usuariosData) {
-                    setLoading(false);
-                    return;
+                // Cargar todos los usuarios desde la API
+                try {
+                    const response = await fetch('/api/users');
+                    if (response.ok) {
+                        const usuarios = await response.json();
+                        setAllUsers(usuarios);
+                    } else {
+                        console.error('Error al cargar usuarios:', response.status);
+                        setAllUsers([]);
+                    }
+                } catch (error) {
+                    console.error('Error al conectar con la API:', error);
+                    setAllUsers([]);
                 }
-
-                const usuarios: Usuario[] = JSON.parse(usuariosData);
-                setAllUsers(usuarios);
 
                 // ✅ VERIFICAR SI HAY DATOS PARA LA ASIGNATURA SELECCIONADA
                 if (asignaturaSeleccionada !== "todas") {
