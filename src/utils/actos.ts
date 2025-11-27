@@ -1,10 +1,6 @@
 // src/utils/actos.ts
-export function registrarActo(email: string, tipo: string, descripcion: string) {
-    const actos = JSON.parse(localStorage.getItem(`actos_${email}`) || "[]");
-    actos.push({
-        tipo,
-        descripcion,
-        fecha: new Date().toLocaleString()
-    });
-    localStorage.setItem(`actos_${email}`, JSON.stringify(actos));
+export async function registrarActo(email: string, tipo: string, descripcion: string) {
+    // TODO: Implementar API para registrar actos
+    // Por ahora, no hacer nada para evitar localStorage
+    console.log('Acto registrado:', { email, tipo, descripcion });
 }

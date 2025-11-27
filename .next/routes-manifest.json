@@ -21,6 +21,14 @@
   },
   "dynamicRoutes": [
     {
+      "page": "/api/users/[id]",
+      "regex": "^/api/users/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/users/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
       "page": "/concurso/[numero]",
       "regex": "^/concurso/([^/]+?)(?:/)?$",
       "routeKeys": {
@@ -83,6 +91,18 @@
       "namedRegex": "^/api/auth/login(?:/)?$"
     },
     {
+      "page": "/api/auth/logout",
+      "regex": "^/api/auth/logout(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/auth/logout(?:/)?$"
+    },
+    {
+      "page": "/api/auth/me",
+      "regex": "^/api/auth/me(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/auth/me(?:/)?$"
+    },
+    {
       "page": "/api/auth/register",
       "regex": "^/api/auth/register(?:/)?$",
       "routeKeys": {},
@@ -95,10 +115,34 @@
       "namedRegex": "^/api/questions(?:/)?$"
     },
     {
+      "page": "/api/settings/language",
+      "regex": "^/api/settings/language(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/settings/language(?:/)?$"
+    },
+    {
+      "page": "/api/stats/championship",
+      "regex": "^/api/stats/championship(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/stats/championship(?:/)?$"
+    },
+    {
       "page": "/api/user/increment-stat",
       "regex": "^/api/user/increment\\-stat(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/api/user/increment\\-stat(?:/)?$"
+    },
+    {
+      "page": "/api/user/premium-status",
+      "regex": "^/api/user/premium\\-status(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/user/premium\\-status(?:/)?$"
+    },
+    {
+      "page": "/api/user/update-likes",
+      "regex": "^/api/user/update\\-likes(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/user/update\\-likes(?:/)?$"
     },
     {
       "page": "/api/users",

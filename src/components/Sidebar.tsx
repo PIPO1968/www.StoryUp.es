@@ -21,10 +21,18 @@ const Sidebar: React.FC = () => {
     const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            const userStr = localStorage.getItem("user");
-            if (userStr) setUser(JSON.parse(userStr));
-        }
+        const loadUser = async () => {
+            try {
+                const response = await fetch('/api/auth/me');
+                if (response.ok) {
+                    const data = await response.json();
+                    setUser(data.user);
+                }
+            } catch (error) {
+                console.error('Error loading user:', error);
+            }
+        };
+        loadUser();
     }, []);
 
     useEffect(() => {
