@@ -10,17 +10,17 @@ export async function POST(request: NextRequest) {
         console.log('Login attempt');
         const body = await request.json();
         console.log('Body:', body);
-        const { nick, password } = body;
+        const { email, password } = body;
 
-        console.log('Nick:', nick, 'Password provided:', !!password);
+        console.log('Email:', email, 'Password provided:', !!password);
 
-        if (!nick || !password) {
-            return NextResponse.json({ error: 'Nick y contraseña requeridos' }, { status: 400 });
+        if (!email || !password) {
+            return NextResponse.json({ error: 'Email y contraseña requeridos' }, { status: 400 });
         }
 
         // Buscar usuario
         const user = await prisma.user.findUnique({
-            where: { nick },
+            where: { email },
             select: {
                 id: true,
                 nick: true,
