@@ -7,11 +7,40 @@ const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest) {
     try {
-        const { nick, password } = await request.json();
+        console.log('Login attempt');
+        const body = await request.json();
+        console.log('Body:', body);
+        const { nick, password } = body;
+
+        console.log('Nick:', nick, 'Password provided:', !!password);
+
+        if (!nick || !password) {
+            return NextResponse.json({ error: 'Nick y contraseña requeridos' }, { status: 400 });
+        }
 
         // Buscar usuario
         const user = await prisma.user.findUnique({
-            where: { nick }
+            where: { nick },
+            select: {
+                id: true,
+                nick: true,
+                nombre: true,
+                email: true,
+                centro: true,
+                curso: true,
+                tipo: true,
+                fechaInscripcion: true,
+                likes: true,
+                respuestasAcertadas: true,
+                competicionesSuperadas: true,
+                concursosGanados: true,
+                comentariosRecibidos: true,
+                historiasCreadas: true,
+                anosEnStoryUp: true,
+                premium: true,
+                language: true,
+                password: true
+            }
         });
 
         if (!user || !user.password) {
@@ -42,7 +71,7 @@ export async function POST(request: NextRequest) {
 
         return response;
     } catch (error) {
-        console.error('Error en login:', error);
+        console.error('Error en login:', error.message, error.stack);
         return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
     }
 }
