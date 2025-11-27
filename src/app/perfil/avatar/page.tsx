@@ -6,30 +6,60 @@ const AvatarSelector: React.FC = () => {
     const router = useRouter();
     const [user, setUser] = useState<any>(null);
     const [selectedAvatar, setSelectedAvatar] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
 
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            const userStr = localStorage.getItem("user");
-            if (userStr) {
-                setUser(JSON.parse(userStr));
-            }
-        }
-    }, []);
-
-    if (!user) return <div>Cargando...</div>;
-
-    const isPremium = user ? (() => {
-        const premiumData = localStorage.getItem(`premium_${user.nick}`);
-        if (premiumData) {
+        const loadUser = async () => {
             try {
-                const data = JSON.parse(premiumData);
-                return data.activo === true;
-            } catch {
-                return false;
+                const response = await fetch('/api/auth/me');
+                if (response.ok) {
+                    const data = await response.json();
+                    setUser(data.user);
+                } else {
+                    router.push('/login');
+                    return;
+                }
+            } catch (error) {
+                console.error('Error loading user:', error);
+                router.push('/login');
+                return;
+            } finally {
+                setLoading(false);
             }
-        }
-        return false;
-    })() : false; // Asumir que hay un campo premium
+        };
+
+        loadUser();
+    }, [router]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-green-100 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900 mx-auto mb-4"></div>
+                    <p>Cargando...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!user) {
+        return (
+            <div className="min-h-screen bg-green-100 flex items-center justify-center">
+                <div className="text-center">
+                    <p>No se pudo cargar la información del usuario.</p>
+                    <button
+                        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
+                        onClick={() => router.push('/login')}
+                    >
+                        Ir al login
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    const isPremium = user.premium || false;
 
     const simpleAvatars = [
         '/avatars/simple1.png',
@@ -45,8 +75,8 @@ const AvatarSelector: React.FC = () => {
         setSelectedAvatar(avatar);
     };
 
-    const handleSave = () => {
-        if (!selectedAvatar) return;
+    const handleSave = async () => {
+        if (!selectedAvatar || saving) return;
 
         // Verificar si el avatar seleccionado es premium y el usuario no es premium
         const isSelectedPremium = premiumAvatars.includes(selectedAvatar);
@@ -55,21 +85,29 @@ const AvatarSelector: React.FC = () => {
             return;
         }
 
-        // Actualizar user
-        const updatedUser = { ...user, avatar: selectedAvatar };
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        // Actualizar en users array
-        const usersStr = localStorage.getItem("users");
-        if (usersStr) {
-            const users = JSON.parse(usersStr);
-            const index = users.findIndex((u: any) => u.nick === user.nick);
-            if (index !== -1) {
-                users[index] = updatedUser;
-                localStorage.setItem("users", JSON.stringify(users));
+        setSaving(true);
+        try {
+            const response = await fetch('/api/user/update-avatar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ avatar: selectedAvatar }),
+            });
+
+            if (response.ok) {
+                alert("Avatar actualizado correctamente");
+                router.push("/perfil");
+            } else {
+                const error = await response.json();
+                alert(`Error al actualizar avatar: ${error.error || 'Error desconocido'}`);
             }
+        } catch (error) {
+            console.error('Error saving avatar:', error);
+            alert('Error al guardar el avatar. Inténtalo de nuevo.');
+        } finally {
+            setSaving(false);
         }
-        alert("Avatar actualizado");
-        router.push("/perfil");
     };
 
     return (
@@ -99,10 +137,10 @@ const AvatarSelector: React.FC = () => {
                                 src={avatar}
                                 alt={`Avatar ${idx + 1}${isPremiumAvatar ? ' (Premium)' : ''}`}
                                 className={`w-16 h-16 rounded-full border-2 transition-all duration-200 ${!canSelect
-                                        ? 'cursor-not-allowed opacity-60 grayscale'
-                                        : selectedAvatar === avatar
-                                            ? 'border-blue-500 cursor-pointer'
-                                            : 'border-gray-300 cursor-pointer hover:border-blue-400'
+                                    ? 'cursor-not-allowed opacity-60 grayscale'
+                                    : selectedAvatar === avatar
+                                        ? 'border-blue-500 cursor-pointer'
+                                        : 'border-gray-300 cursor-pointer hover:border-blue-400'
                                     } ${isPremiumAvatar ? 'ring-2 ring-yellow-400 ring-opacity-50' : ''}`}
                                 onClick={() => canSelect && handleSelectAvatar(avatar)}
                                 title={isPremiumAvatar && !isPremium ? 'Avatar Premium - Hazte Premium para usarlo' : `Avatar ${idx + 1}`}
@@ -116,19 +154,22 @@ const AvatarSelector: React.FC = () => {
                     );
                 })}
             </div>
-            <button
-                className="bg-green-500 text-white px-6 py-3 rounded font-semibold"
-                onClick={handleSave}
-                disabled={!selectedAvatar}
-            >
-                Guardar Avatar
-            </button>
-            <button
-                className="bg-gray-500 text-white px-6 py-3 rounded font-semibold mt-4"
-                onClick={() => router.push("/perfil")}
-            >
-                Volver
-            </button>
+            <div className="flex gap-4">
+                <button
+                    className="bg-green-500 text-white px-6 py-3 rounded font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleSave}
+                    disabled={!selectedAvatar || saving}
+                >
+                    {saving ? 'Guardando...' : 'Guardar Avatar'}
+                </button>
+                <button
+                    className="bg-gray-500 text-white px-6 py-3 rounded font-semibold"
+                    onClick={() => router.push("/perfil")}
+                    disabled={saving}
+                >
+                    Volver
+                </button>
+            </div>
         </div>
     );
 };

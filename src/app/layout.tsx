@@ -22,22 +22,57 @@ const geistMono = Geist_Mono({
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const [showSidebar, setShowSidebar] = React.useState(false);
+  const [user, setUser] = React.useState<any>(null);
+  const [loading, setLoading] = React.useState(true);
+
   React.useEffect(() => {
-    if (typeof window !== "undefined") {
-      const pathname = window.location.pathname;
-      const user = localStorage.getItem("user");
-      // Si está logueado y accede a / o /registro, redirigir a perfil
-      if (user && (pathname === "/" || pathname === "/registro")) {
-        window.location.href = "/perfil";
-      }
-      // Sidebar visible en todas las páginas excepto registro/login
-      if (user && !["/registro", "/login", "/"].includes(pathname)) {
-        setShowSidebar(true);
-      } else {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/me');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.user) {
+            setUser(data.user);
+            setShowSidebar(true);
+          } else {
+            setShowSidebar(false);
+          }
+        } else {
+          setShowSidebar(false);
+        }
+      } catch (error) {
+        console.error('Error checking auth:', error);
         setShowSidebar(false);
+      } finally {
+        setLoading(false);
       }
-    }
+    };
+
+    checkAuth();
   }, []);
+
+  if (loading) {
+    return (
+      <html lang="es">
+        <head>
+          <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+          <title>StoryUp</title>
+        </head>
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-green-100`}>
+          <I18nProvider>
+            <Header />
+            <main className="flex items-center justify-center min-h-screen">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900 mx-auto mb-4"></div>
+                <p>Cargando...</p>
+              </div>
+            </main>
+          </I18nProvider>
+        </body>
+      </html>
+    );
+  }
+
   return (
     <html lang="es">
       <head>
