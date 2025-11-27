@@ -40,7 +40,8 @@ export default function AprendeConPipo() {
     const [centroCompeticion, setCentroCompeticion] = React.useState("");
     // Ejemplo de cursos y asignaturas
     const cursos = ["1º Primaria", "2º Primaria", "3º Primaria", "4º Primaria", "5º Primaria", "6º Primaria"];
-    const asignaturas = ["Naturaleza", "Matemáticas", "Lenguaje", "Literatura", "Inglés", "Geografía", "Historia", "General", "Campeonato"];
+    const asignaturas = ["naturaleza", "matematicas", "lenguaje", "literatura", "ingles", "geografia", "historia", "general", "campeonato"];
+    const displayAsignaturas = ["Naturaleza", "Matemáticas", "Lenguaje", "Literatura", "Inglés", "Geografía", "Historia", "General", "Campeonato"];
 
     // Lógica de temporada
     function getCurrentSeason() {
@@ -141,7 +142,7 @@ export default function AprendeConPipo() {
     // Estado para selección de curso y asignatura - SISTEMA ANTI-TRAMPA
     const [usuarioActual, setUsuarioActual] = React.useState<any>(null);
     const [cursoUsuario, setCursoUsuario] = React.useState<string>("1º Primaria");
-    const [asignaturaSeleccionada, setAsignaturaSeleccionada] = React.useState<string>("Matemáticas");
+    const [asignaturaSeleccionada, setAsignaturaSeleccionada] = React.useState<string>("matematicas");
     const [preguntaActual, setPreguntaActual] = React.useState<string>("");
     const [objetoPreguntaActual, setObjetoPreguntaActual] = React.useState<any>(null);
     const [respuestaCorrecta, setRespuestaCorrecta] = React.useState<string>("");
@@ -265,8 +266,8 @@ export default function AprendeConPipo() {
     // Filtrar preguntas por asignatura
     const preguntasFiltradas = React.useMemo(() => {
         if (asignaturaSeleccionada === "General") return preguntas;
-        // Filtrar solo preguntas con categoria igual a la asignatura seleccionada
-        const filtradas = preguntas.filter((p: any) => p.categoria === asignaturaSeleccionada);
+        // Filtrar solo preguntas con categoria igual a la asignatura seleccionada (ignorando mayúsculas y acentos)
+        const filtradas = preguntas.filter((p: any) => p.categoria.toLowerCase().replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i').replace(/ó/g, 'o').replace(/ú/g, 'u') === asignaturaSeleccionada);
         return filtradas;
     }, [preguntas, asignaturaSeleccionada]);
 
@@ -479,7 +480,7 @@ export default function AprendeConPipo() {
                             <div className="flex flex-col md:flex-row gap-4 items-center justify-center">
                                 <label className="font-semibold">Asignatura:</label>
                                 <select className="border rounded px-2 py-1" value={asignaturaSeleccionada} onChange={e => setAsignaturaSeleccionada(e.target.value)}>
-                                    {asignaturas.map(a => <option key={a} value={a}>{a}</option>)}
+                                    {asignaturas.map((a, i) => <option key={a} value={a}>{displayAsignaturas[i]}</option>)}
                                 </select>
                                 <div className="text-sm text-gray-600">
                                     (Curso fijo: <strong>{cursoUsuario}</strong>)
