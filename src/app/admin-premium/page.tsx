@@ -34,33 +34,27 @@ export default function AdminPremium() {
     const ADMINS_AUTORIZADOS = ['PIPO68'];
 
     useEffect(() => {
-        // Verificar si hay usuario logueado
-        if (typeof window !== 'undefined') {
-            const usuarioData = localStorage.getItem('user'); // Cambiado de 'usuario' a 'user'
-            if (usuarioData) {
-                const usuario = JSON.parse(usuarioData);
-                setUsuarioLogueado(usuario);
-
-                // Cargar usuarios
-                const usersData = localStorage.getItem('users');
-                if (usersData) {
-                    try {
-                        const users = JSON.parse(usersData);
-                        console.log('Usuarios cargados:', users);
-                        // Ya no necesitamos almacenar usuarios en el estado
-                    } catch (error) {
-                        console.error('Error al parsear usuarios:', error);
+        // Verificar si hay usuario logueado via API
+        const checkUser = async () => {
+            try {
+                const response = await fetch('/api/auth/me');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.user) {
+                        setUsuarioLogueado(data.user);
+                    } else {
+                        setAccesoDenegado(true);
                     }
                 } else {
-                    console.log('No se encontraron usuarios en localStorage');
+                    setAccesoDenegado(true);
                 }
-
-                // Solo denegar acceso si no hay usuario logueado
-                // Los usuarios logueados (docentes o PIPO68) pueden acceder
-            } else {
+            } catch (error) {
+                console.error('Error checking user:', error);
                 setAccesoDenegado(true);
             }
-        }
+        };
+
+        checkUser();
     }, []);
 
     // Si no tiene acceso, mostrar página de error
