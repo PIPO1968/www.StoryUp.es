@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Validar que stat sea un campo válido
-        const validStats = ['respuestasAcertadas', 'concursosGanados', 'historiasCreadas', 'likes'];
+        const validStats = ['respuestasAcertadas', 'concursosGanados', 'historiasCreadas', 'likes', 'preguntasFalladas'];
         if (!validStats.includes(stat)) {
             return NextResponse.json({ error: 'Stat no válido' }, { status: 400 });
         }
