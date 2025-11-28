@@ -20,11 +20,11 @@ RUN npx prisma generate
 # Copiar código fuente
 COPY . .
 
-# Build de la aplicación
-RUN npm run build
+# Build de la aplicación (sin migraciones)
+RUN npm run build:next
 
 # Exponer puerto
 EXPOSE 3000
 
-# Comando para ejecutar
-CMD ["npm", "start"]
+# Comando para ejecutar (con migraciones)
+CMD ["sh", "-c", "npx prisma migrate deploy && node seed-database.js && npm start"]

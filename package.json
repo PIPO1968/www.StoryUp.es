@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "prisma migrate deploy && node seed-database.js && next build",
+    "build:next": "next build",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
