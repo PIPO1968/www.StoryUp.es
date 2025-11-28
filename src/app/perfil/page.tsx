@@ -26,27 +26,6 @@ interface Usuario {
 
 const PerfilUsuario: React.FC = () => {
     const router = useRouter();
-    // Función para bloquear manualmente el trofeo 10 al usuario seleccionado
-    // Función para bloquear manualmente cualquier trofeo al usuario seleccionado
-    const handleLockTrofeo = (trofeoIdx: number) => {
-        if (!selectedUser) return;
-        const updatedUsers = usuarios.map((u: any) =>
-            u.nick === selectedUser
-                ? {
-                    ...u,
-                    trofeosDesbloqueados: Array.isArray(u.trofeosDesbloqueados)
-                        ? u.trofeosDesbloqueados.filter((idx: number) => idx !== trofeoIdx)
-                        : [],
-                    trofeosBloqueados: Array.isArray(u.trofeosBloqueados)
-                        ? [...new Set([...(u.trofeosBloqueados || []), trofeoIdx])]
-                        : [trofeoIdx]
-                }
-                : u
-        );
-        setUsuarios(updatedUsers);
-        alert(`Trofeo #${trofeoIdx + 1} bloqueado manualmente para ${selectedUser}`);
-    };
-
     // Función para asignar trofeos al usuario si su centro ganó premios este mes
     const asignarTrofeosUsuario = async (usuario: any) => {
         if (typeof window === "undefined") return;

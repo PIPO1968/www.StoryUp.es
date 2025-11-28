@@ -103,17 +103,26 @@ async function seedDatabase() {
 
         // 4. Crear algunas historias de prueba
         console.log('📖 Creando historias de prueba...');
+
+        // Obtener IDs de usuarios creados
+        const pipoUser = await prisma.user.findUnique({ where: { nick: 'PIPO68' } });
+        const docenteUser = await prisma.user.findUnique({ where: { nick: 'TestDocente' } });
+
+        if (!pipoUser || !docenteUser) {
+            throw new Error('Usuarios de prueba no encontrados');
+        }
+
         const historias = [
             {
                 titulo: 'Mi aventura en el bosque mágico',
                 contenido: 'Era una vez un niño llamado Juan que encontró un bosque mágico...',
-                autorId: 1, // PIPO68
+                autorId: pipoUser.id,
                 likes: 12
             },
             {
                 titulo: 'La historia de la niña valiente',
                 contenido: 'En un pueblo lejano vivía una niña muy valiente llamada María...',
-                autorId: 2, // TestDocente
+                autorId: docenteUser.id,
                 likes: 8
             }
         ];
