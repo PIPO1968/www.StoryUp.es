@@ -28,14 +28,8 @@ const PremiumPage: React.FC = () => {
                 const user = await response.json();
                 setUsuario(user);
 
-                // Verificar si tiene premium activo
-                const premiumResponse = await fetch('/api/premium/data');
-                if (premiumResponse.ok) {
-                    const premium = await premiumResponse.json();
-                    if (premium.activo && premium.fechaExpiracion && new Date(premium.fechaExpiracion) > new Date()) {
-                        setIsPremium(true);
-                    }
-                }
+                // Verificar si tiene premium activo usando el campo del usuario
+                setIsPremium(user.premium || false);
             } catch (error) {
                 console.error('Error loading user:', error);
                 router.push('/');
