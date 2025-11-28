@@ -96,7 +96,7 @@ const PerfilUsuario: React.FC = () => {
     // Estados para gestionar concursos finalizados
     const [concursoSeleccionado, setConcursoSeleccionado] = useState("");
     const [ganadorSeleccionado, setGanadorSeleccionado] = useState("");
-    const [refreshKey, setRefreshKey] = useState(0);
+    const [selectedUserData, setSelectedUserData] = useState<any>(null);
     // Estados para datos de base de datos
     const [premiumData, setPremiumData] = useState<any>(null);
     const [userTrofeos, setUserTrofeos] = useState({ trofeosDesbloqueados: [], trofeosBloqueados: [] });
@@ -161,9 +161,9 @@ const PerfilUsuario: React.FC = () => {
         }
     }, [user]);
 
-    // Cargar datos de usuario seleccionado
+    // Cargar datos premium y trofeos del usuario mostrado
     useEffect(() => {
-        if (displayedUser) {
+        if (displayedUser && displayedUser.nick) {
             fetch('/api/premium/data?nick=' + displayedUser.nick)
                 .then(response => response.json())
                 .then(data => setPremiumData(data))
@@ -576,7 +576,7 @@ const PerfilUsuario: React.FC = () => {
             </div>
         );
     }
-    const displayedUser = selectedUser ? { ...(usuarios.find(u => u.nick === selectedUser) || user), trofeosDesbloqueados: userTrofeos.trofeosDesbloqueados, trofeosBloqueados: userTrofeos.trofeosBloqueados } : { ...user, trofeosDesbloqueados: userTrofeos.trofeosDesbloqueados, trofeosBloqueados: userTrofeos.trofeosBloqueados };
+    const displayedUser = selectedUser ? (selectedUserData || { ...user, trofeosDesbloqueados: userTrofeos.trofeosDesbloqueados, trofeosBloqueados: userTrofeos.trofeosBloqueados }) : { ...user, trofeosDesbloqueados: userTrofeos.trofeosDesbloqueados, trofeosBloqueados: userTrofeos.trofeosBloqueados };
 
     const isPremium = displayedUser ? (premiumData && premiumData.activo) : false;
     return (
