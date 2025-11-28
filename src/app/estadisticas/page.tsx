@@ -333,7 +333,8 @@ export default function Estadisticas() {
 
                     </ul>
                 </div>
-            </div >            {/* Bloque Premium: Estadísticas Avanzadas Solo para Premium */}
+            </div>
+            {/* Bloque Premium: Estadísticas Avanzadas Solo para Premium */}
             {isPremium && (
                 <div className="max-w-5xl mx-auto mt-8">
                     <div className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-2xl p-1 shadow-2xl">
@@ -723,10 +724,7 @@ export default function Estadisticas() {
                         );
                     })()}</li>
                 </ul>
-            </div >
+            </div>
         </>
-    )
-}
-        </div >
     );
 }
