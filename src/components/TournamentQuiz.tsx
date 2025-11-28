@@ -1,4 +1,5 @@
 import React from "react";
+import { useQuizLogic } from "@/hooks/useQuizLogic";
 
 interface TournamentQuizProps {
     userGrade: number;
@@ -6,34 +7,39 @@ interface TournamentQuizProps {
 }
 
 const TournamentQuiz: React.FC<TournamentQuizProps> = ({ userGrade, onTournamentComplete }) => {
-    const [preguntaActual, setPreguntaActual] = React.useState<string>("");
-    const [objetoPreguntaActual, setObjetoPreguntaActual] = React.useState<any>(null);
-    const [respuestaCorrecta, setRespuestaCorrecta] = React.useState<string>("");
-    const [respuestaUsuario, setRespuestaUsuario] = React.useState<string>("");
-    const [feedback, setFeedback] = React.useState<string>("");
-    const [preguntasUsadas, setPreguntasUsadas] = React.useState<string[]>([]);
-    const [timeLeft, setTimeLeft] = React.useState<number>(300); // 5 minutos por pregunta
-    const [bloqueado, setBloqueado] = React.useState<boolean>(false);
-    const [aciertos, setAciertos] = React.useState<number>(0);
-    const [puntuacionTotal, setPuntuacionTotal] = React.useState<number>(0);
-    const [preguntaNumero, setPreguntaNumero] = React.useState<number>(1);
-
-    // Temporizador
-    React.useEffect(() => {
-        if (!preguntaActual || bloqueado) return;
-        if (timeLeft === 0) {
-            setBloqueado(true);
+    const {
+        preguntaActual,
+        setPreguntaActual,
+        objetoPreguntaActual,
+        setObjetoPreguntaActual,
+        respuestaCorrecta,
+        setRespuestaCorrecta,
+        respuestaUsuario,
+        setRespuestaUsuario,
+        feedback,
+        setFeedback,
+        preguntasUsadas,
+        setPreguntasUsadas,
+        timeLeft,
+        setTimeLeft,
+        bloqueado,
+        setBloqueado,
+        aciertos,
+        setAciertos,
+        puntuacionTotal,
+        setPuntuacionTotal,
+        preguntaNumero,
+        setPreguntaNumero,
+        comprobarRespuesta,
+        generarPregunta,
+        resetQuiz
+    } = useQuizLogic({
+        timeLimit: 300,
+        onTimeUp: () => {
             setPuntuacionTotal(puntuacionTotal - 15);
             setFeedback("⏰ Tiempo agotado. -15 puntos");
-            // No pasar automáticamente - esperar que el usuario presione "Siguiente Pregunta"
-            // setTimeout(() => {
-            //     generarPregunta();
-            // }, 3000);
-            return;
         }
-        const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-        return () => clearTimeout(timer);
-    }, [timeLeft, preguntaActual, bloqueado, puntuacionTotal]);
+    });
 
     // Cargar preguntas de general según el curso
     let preguntas: any[] = [];
@@ -43,97 +49,57 @@ const TournamentQuiz: React.FC<TournamentQuizProps> = ({ userGrade, onTournament
         preguntas = [];
     }
 
-    function generarPregunta() {
+    const handleGenerarPregunta = () => {
         if (preguntasUsadas.length >= 25) {
             // Torneo completado
             onTournamentComplete(aciertos, puntuacionTotal);
             return;
-        } if (preguntas.length === 0) {
-            setPreguntaActual("No hay preguntas disponibles para este curso.");
-            setBloqueado(true);
-            return;
         }
 
-        // Filtrar preguntas no usadas
-        const restantes = preguntas.filter((p: any) => !preguntasUsadas.includes(p.pregunta));
+        generarPregunta(preguntas, 25, () => {
+            onTournamentComplete(aciertos, puntuacionTotal);
+        });
+    };
 
-        if (restantes.length === 0) {
-            // Si no hay más preguntas únicas, permitir repetición pero con baja probabilidad
-            const randomIndex = Math.floor(Math.random() * preguntas.length);
-            const preguntaSeleccionada = preguntas[randomIndex];
-            setPreguntaActual(preguntaSeleccionada.pregunta);
-            setObjetoPreguntaActual(preguntaSeleccionada);
-            setRespuestaCorrecta(preguntaSeleccionada.respuesta_correcta);
-            setRespuestaUsuario("");
-            setFeedback("");
-            setTimeLeft(300);
-            setBloqueado(false);
-            setPreguntaNumero(preguntaNumero + 1);
-            return;
-        }
-
-        const randomIndex = Math.floor(Math.random() * restantes.length);
-        const preguntaSeleccionada = restantes[randomIndex];
-
-        setPreguntaActual(preguntaSeleccionada.pregunta);
-        setObjetoPreguntaActual(preguntaSeleccionada);
-        setRespuestaCorrecta(preguntaSeleccionada.respuesta_correcta);
-        setRespuestaUsuario("");
-        setFeedback("");
-        setTimeLeft(300);
-        setBloqueado(false);
-        setPreguntaNumero(preguntaNumero + 1);
-
-        // Agregar a preguntas usadas
-        setPreguntasUsadas([...preguntasUsadas, preguntaSeleccionada.pregunta]);
-    }
-
-    function verificarRespuesta() {
+    const handleVerificarRespuesta = () => {
         if (bloqueado) return;
 
-        const tiempoUsado = 300 - timeLeft; // Tiempo usado en segundos
+        const tiempoUsado = 300 - timeLeft;
         let puntosPregunta = 0;
 
         if (respuestaUsuario.toLowerCase().trim() === respuestaCorrecta.toLowerCase().trim()) {
-            // Respuesta correcta
             setAciertos(aciertos + 1);
-            if (tiempoUsado <= 60) { // Menos de 1 minuto
+            if (tiempoUsado <= 60) {
                 puntosPregunta = 10;
                 setFeedback("✅ ¡Correcto! +10 puntos (rápido)");
-            } else if (tiempoUsado <= 120) { // Menos de 2 minutos
+            } else if (tiempoUsado <= 120) {
                 puntosPregunta = 5;
                 setFeedback("✅ ¡Correcto! +5 puntos");
             } else {
-                puntosPregunta = 5; // Mantiene +5 para respuestas correctas después de 2 minutos
+                puntosPregunta = 5;
                 setFeedback("✅ ¡Correcto! +5 puntos");
             }
         } else {
-            // Respuesta incorrecta
-            if (tiempoUsado <= 60) { // Menos de 1 minuto
+            if (tiempoUsado <= 60) {
                 puntosPregunta = -5;
                 setFeedback(`❌ Incorrecto. -5 puntos\nLa respuesta correcta era: ${respuestaCorrecta}`);
-            } else if (tiempoUsado <= 120) { // Menos de 2 minutos
+            } else if (tiempoUsado <= 120) {
                 puntosPregunta = -10;
                 setFeedback(`❌ Incorrecto. -10 puntos\nLa respuesta correcta era: ${respuestaCorrecta}`);
             } else {
-                puntosPregunta = -10; // Mantiene -10 para respuestas incorrectas después de 2 minutos
+                puntosPregunta = -10;
                 setFeedback(`❌ Incorrecto. -10 puntos\nLa respuesta correcta era: ${respuestaCorrecta}`);
             }
         }
 
         setPuntuacionTotal(puntuacionTotal + puntosPregunta);
         setBloqueado(true);
-
-        // No pasar automáticamente - esperar que el usuario presione "Siguiente Pregunta"
-        // setTimeout(() => {
-        //     generarPregunta();
-        // }, 3000);
-    }
+    };
 
     // Iniciar el torneo automáticamente
     React.useEffect(() => {
         if (preguntas.length > 0 && !preguntaActual) {
-            generarPregunta();
+            handleGenerarPregunta();
         }
     }, [preguntas]);
 
@@ -215,7 +181,7 @@ const TournamentQuiz: React.FC<TournamentQuizProps> = ({ userGrade, onTournament
                             <div className="flex gap-4">
                                 {!bloqueado ? (
                                     <button
-                                        onClick={verificarRespuesta}
+                                        onClick={handleVerificarRespuesta}
                                         disabled={!respuestaUsuario.trim()}
                                         className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-purple-700 disabled:bg-gray-400 transition-colors"
                                     >
@@ -223,7 +189,7 @@ const TournamentQuiz: React.FC<TournamentQuizProps> = ({ userGrade, onTournament
                                     </button>
                                 ) : (
                                     <button
-                                        onClick={() => generarPregunta()}
+                                        onClick={() => handleGenerarPregunta()}
                                         className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors"
                                     >
                                         {preguntasUsadas.length >= 25 ? 'Finalizar Torneo' : 'Siguiente Pregunta'}

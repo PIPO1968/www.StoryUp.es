@@ -1,4 +1,5 @@
 import React from "react";
+import { useQuizLogic } from "@/hooks/useQuizLogic";
 
 interface ChampionshipQuizProps {
     userGrade: number;
@@ -6,13 +7,39 @@ interface ChampionshipQuizProps {
 }
 
 const ChampionshipQuiz: React.FC<ChampionshipQuizProps> = ({ userGrade, userSchool }) => {
-    const [preguntaActual, setPreguntaActual] = React.useState<string>("");
-    const [respuestaCorrecta, setRespuestaCorrecta] = React.useState<string>("");
-    const [respuestaUsuario, setRespuestaUsuario] = React.useState<string>("");
-    const [feedback, setFeedback] = React.useState<string>("");
-    const [preguntasUsadas, setPreguntasUsadas] = React.useState<string[]>([]);
-    const [timeLeft, setTimeLeft] = React.useState<number>(300); // 5 minutos
-    const [bloqueado, setBloqueado] = React.useState<boolean>(false);
+    const {
+        preguntaActual,
+        setPreguntaActual,
+        objetoPreguntaActual,
+        setObjetoPreguntaActual,
+        respuestaCorrecta,
+        setRespuestaCorrecta,
+        respuestaUsuario,
+        setRespuestaUsuario,
+        feedback,
+        setFeedback,
+        preguntasUsadas,
+        setPreguntasUsadas,
+        timeLeft,
+        setTimeLeft,
+        bloqueado,
+        setBloqueado,
+        aciertos,
+        setAciertos,
+        puntuacionTotal,
+        setPuntuacionTotal,
+        preguntaNumero,
+        setPreguntaNumero,
+        comprobarRespuesta,
+        generarPregunta,
+        resetQuiz
+    } = useQuizLogic({
+        timeLimit: 300,
+        onTimeUp: () => {
+            // Lógica específica para campeonatos
+        }
+    });
+
     const [currentUser, setCurrentUser] = React.useState<any>(null);
     const [sessionResponses, setSessionResponses] = React.useState<any[]>([]);
 
@@ -68,17 +95,6 @@ const ChampionshipQuiz: React.FC<ChampionshipQuizProps> = ({ userGrade, userScho
         }
     };
 
-    React.useEffect(() => {
-        if (!preguntaActual || bloqueado) return;
-        if (timeLeft === 0) {
-            setBloqueado(true);
-            setFeedback("⏰ Tiempo agotado. No puedes responder esta pregunta. -3 likes");
-            updateUserLikes(-3);
-            return;
-        }
-        const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-        return () => clearTimeout(timer);
-    }, [timeLeft, preguntaActual, bloqueado]);
     // Cargar preguntas de campeonato según el curso
     let preguntas: any[] = [];
     try {
@@ -87,7 +103,7 @@ const ChampionshipQuiz: React.FC<ChampionshipQuizProps> = ({ userGrade, userScho
         preguntas = [];
     }
 
-    function generarPregunta() {
+    const handleGenerarPregunta = () => {
         if (preguntasUsadas.length >= 25) {
             setPreguntaActual("");
             setRespuestaCorrecta("");
@@ -122,39 +138,21 @@ const ChampionshipQuiz: React.FC<ChampionshipQuizProps> = ({ userGrade, userScho
                 };
 
                 updateChampionshipStats(stats);
-
-                // Resetear respuestas de sesión para próxima partida
                 setSessionResponses([]);
             }
             return;
         }
-        setTimeLeft(300);
-        setBloqueado(false);
-        const restantes = preguntas.filter((p: any) => !preguntasUsadas.includes(p.pregunta));
-        if (restantes.length === 0) {
-            setPreguntaActual("");
-            setRespuestaCorrecta("");
-            setFeedback("¡No hay más preguntas disponibles en el banco!");
-            setBloqueado(true);
-            return;
-        }
-        const random = Math.floor(Math.random() * restantes.length);
-        setPreguntaActual(restantes[random].pregunta);
-        setRespuestaCorrecta(restantes[random].respuesta);
-        setRespuestaUsuario("");
-        setFeedback("");
-        setPreguntasUsadas([...preguntasUsadas, restantes[random].pregunta]);
-    }
 
-    function comprobarRespuesta() {
-        // Normalizar para comparar respuestas
-        function normalizar(str: string) {
-            return str.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/\s+/g, "").trim();
-        }
+        generarPregunta(preguntas, 25);
+    };
+
+    const handleComprobarRespuesta = () => {
         if (bloqueado) return;
-        const esCorrecta = normalizar(respuestaUsuario) === normalizar(respuestaCorrecta);
+
+        const esCorrecta = respuestaUsuario.toLowerCase().trim() === respuestaCorrecta.toLowerCase().trim();
         setBloqueado(true);
         let likesDelta = 0;
+
         if (esCorrecta) {
             setFeedback("¡Correcto! 🎉");
             likesDelta = timeLeft > 120 ? 2 : 1;
@@ -163,10 +161,8 @@ const ChampionshipQuiz: React.FC<ChampionshipQuizProps> = ({ userGrade, userScho
             likesDelta = timeLeft > 120 ? -1 : -2;
         }
 
-        // Actualizar likes
         updateUserLikes(likesDelta);
 
-        // Guardar respuesta en el historial de sesión
         const respuesta = {
             pregunta: preguntaActual,
             respuestaUsuario,
@@ -176,14 +172,14 @@ const ChampionshipQuiz: React.FC<ChampionshipQuizProps> = ({ userGrade, userScho
             likes: likesDelta
         };
         setSessionResponses(prev => [...prev, respuesta]);
-    }
+    };
 
     return (
         <div className="p-4 bg-yellow-100 rounded-lg">
             <h2 className="text-xl font-bold mb-2">Modo Campeonato</h2>
             <p>Curso seleccionado: {userGrade}º Primaria</p>
             <p>Centro escolar: {userSchool || "No especificado"}</p>
-            <button className="bg-blue-500 text-white px-4 py-2 rounded mt-2" onClick={generarPregunta}>
+            <button className="bg-blue-500 text-white px-4 py-2 rounded mt-2" onClick={handleGenerarPregunta}>
                 Generar pregunta de campeonato
             </button>
             {preguntaActual && (
@@ -198,7 +194,7 @@ const ChampionshipQuiz: React.FC<ChampionshipQuizProps> = ({ userGrade, userScho
                         placeholder="Escribe tu respuesta aquí"
                         disabled={bloqueado}
                     />
-                    <button className="bg-green-500 text-white px-4 py-2 rounded" onClick={comprobarRespuesta} disabled={bloqueado}>
+                    <button className="bg-green-500 text-white px-4 py-2 rounded" onClick={handleComprobarRespuesta} disabled={bloqueado}>
                         Enviar respuesta
                     </button>
                     {feedback && <div className="mt-2 font-bold">{feedback}</div>}
