@@ -71,7 +71,7 @@ export default function PerfilPorNick() {
 
     return (
         <div className="min-h-screen bg-green-100 p-8">
-            <h1 className="text-2xl font-bold mb-4 text-center">Información Personal</h1>
+            <h1 className="text-2xl font-bold mb-4 text-center">Perfil de {renderNick(perfil.nick)}</h1>
 
             {/* Indicador Premium Animado */}
             {isPerfilPremium && (
@@ -123,15 +123,7 @@ export default function PerfilPorNick() {
                         )}
                     </div>
                 </div>
-                <div className="flex justify-between items-center mb-4 relative">
-                    <h3 className={`text-xl font-bold text-center w-full transition-all duration-300 ${isPerfilPremium ? 'text-yellow-600' : ''
-                        }`}>
-                        Información Personal
-                        {isPerfilPremium && (
-                            <span className="ml-2 animate-spin">👑</span>
-                        )}
-                    </h3>
-                </div>
+
                 <p><strong>Nick:</strong> {renderNick(perfil.nick)}</p>
                 <p><strong>Email:</strong> {perfil.email}</p>
                 <p><strong>Centro Educativo:</strong> {perfil.centro}</p>
