@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { renderNick } from "@/utils/renderNick";
 import { useTranslation } from "@/utils/i18n";
+import { CARD_STYLES } from "@/utils/styles";
 
 type Historia = {
     id: number;
@@ -35,7 +36,7 @@ export default function Historias() {
         <div className="min-h-screen bg-green-100 p-8">
             <h1 className="text-2xl font-bold mb-4 text-center">{t('historiasTitle')}</h1>
             {/* Bloque superior: últimas 25 historias */}
-            <div className="bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto mb-8">
+            <div className={`${CARD_STYLES.default} max-w-4xl mx-auto mb-8`}>
                 <h2 className="text-lg font-bold mb-2 text-center">{t('ultimas25Historias')}</h2>
                 <ul className="divide-y">
                     {historias.length > 0 ? (
@@ -61,7 +62,7 @@ export default function Historias() {
             {/* Bloques inferiores: más likes y más comentarios */}
             <div className="flex flex-row gap-8 max-w-7xl mx-auto">
                 {/* Bloque: historias con más likes */}
-                <div className="bg-white rounded-lg shadow-md p-6 w-1/2">
+                <div className={`${CARD_STYLES.default} w-1/2`}>
                     <h2 className="text-lg font-bold mb-2 text-center">{t('topHistoriasLikes')}</h2>
                     <ul className="divide-y">
                         {topLikes.length > 0 ? (
@@ -85,7 +86,7 @@ export default function Historias() {
                     </ul>
                 </div>
                 {/* Bloque: historias con más comentarios */}
-                <div className="bg-white rounded-lg shadow-md p-6 w-1/2">
+                <div className={`${CARD_STYLES.default} w-1/2`}>
                     <h2 className="text-lg font-bold mb-2 text-center">{t('topHistoriasComentarios')}</h2>
                     <ul className="divide-y">
                         {topComentarios.length > 0 ? (

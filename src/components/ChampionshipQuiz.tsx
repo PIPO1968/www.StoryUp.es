@@ -1,5 +1,6 @@
 import React from "react";
 import { useQuizLogic } from "@/hooks/useQuizLogic";
+import { BUTTON_STYLES } from "../utils/styles";
 
 interface ChampionshipQuizProps {
     userGrade: number;
@@ -179,7 +180,7 @@ const ChampionshipQuiz: React.FC<ChampionshipQuizProps> = ({ userGrade, userScho
             <h2 className="text-xl font-bold mb-2">Modo Campeonato</h2>
             <p>Curso seleccionado: {userGrade}º Primaria</p>
             <p>Centro escolar: {userSchool || "No especificado"}</p>
-            <button className="bg-blue-500 text-white px-4 py-2 rounded mt-2" onClick={handleGenerarPregunta}>
+            <button className={BUTTON_STYLES.primary + " mt-2"} onClick={handleGenerarPregunta}>
                 Generar pregunta de campeonato
             </button>
             {preguntaActual && (
@@ -194,7 +195,7 @@ const ChampionshipQuiz: React.FC<ChampionshipQuizProps> = ({ userGrade, userScho
                         placeholder="Escribe tu respuesta aquí"
                         disabled={bloqueado}
                     />
-                    <button className="bg-green-500 text-white px-4 py-2 rounded" onClick={handleComprobarRespuesta} disabled={bloqueado}>
+                    <button className={BUTTON_STYLES.success} onClick={handleComprobarRespuesta} disabled={bloqueado}>
                         Enviar respuesta
                     </button>
                     {feedback && <div className="mt-2 font-bold">{feedback}</div>}

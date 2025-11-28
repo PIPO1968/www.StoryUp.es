@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { BUTTON_STYLES } from "../../../utils/styles";
 
 const AvatarSelector: React.FC = () => {
     const router = useRouter();
@@ -49,7 +50,7 @@ const AvatarSelector: React.FC = () => {
                 <div className="text-center">
                     <p>No se pudo cargar la información del usuario.</p>
                     <button
-                        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
+                        className={BUTTON_STYLES.primary}
                         onClick={() => router.push('/login')}
                     >
                         Ir al login
@@ -156,14 +157,14 @@ const AvatarSelector: React.FC = () => {
             </div>
             <div className="flex gap-4">
                 <button
-                    className="bg-green-500 text-white px-6 py-3 rounded font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={BUTTON_STYLES.successLarge}
                     onClick={handleSave}
                     disabled={!selectedAvatar || saving}
                 >
                     {saving ? 'Guardando...' : 'Guardar Avatar'}
                 </button>
                 <button
-                    className="bg-gray-500 text-white px-6 py-3 rounded font-semibold"
+                    className={BUTTON_STYLES.secondaryLarge}
                     onClick={() => router.push("/perfil")}
                     disabled={saving}
                 >

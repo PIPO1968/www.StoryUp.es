@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { BUTTON_STYLES } from "../utils/styles";
 
 const PerfilChat = () => {
     const [messages, setMessages] = useState<Array<{ user: string, text: string }>>([]);
@@ -35,7 +36,7 @@ const PerfilChat = () => {
                     onKeyDown={e => e.key === 'Enter' && handleSend()}
                 />
                 <button
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                    className={BUTTON_STYLES.primary}
                     onClick={handleSend}
                 >Enviar</button>
             </div>

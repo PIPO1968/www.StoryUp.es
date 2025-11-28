@@ -38,6 +38,7 @@ async function getTablaDocentes(temporada: number) {
 import React from "react";
 import ChampionshipQuiz from "../../components/ChampionshipQuiz";
 import TournamentQuiz from "../../components/TournamentQuiz";
+import { BUTTON_STYLES } from "../../utils/styles";
 
 export default function AprendeConPipo() {
     // Lógica de temporada
@@ -437,10 +438,10 @@ export default function AprendeConPipo() {
                                     (Curso fijo: <strong>{cursoUsuario}</strong>)
                                 </div>
                             </div>
-                            <button className="bg-blue-500 text-white px-4 py-2 rounded mt-4" onClick={generarPregunta}>
+                            <button className={BUTTON_STYLES.primary + " mt-4"} onClick={generarPregunta}>
                                 Generar pregunta
                             </button>
-                            <button className="bg-orange-500 text-white px-4 py-2 rounded mt-4 self-center" onClick={() => {
+                            <button className={BUTTON_STYLES.orange + " mt-4 self-center"} onClick={() => {
                                 // Obtener curso y centro escolar del usuario desde API
                                 let cursoUsuario = 1;
                                 let centroUsuario = "";
@@ -470,7 +471,7 @@ export default function AprendeConPipo() {
                                 Modo competición
                             </button>
                             {isPremium && (
-                                <button className="bg-purple-500 text-white px-4 py-2 rounded mt-4 self-center" onClick={() => {
+                                <button className={BUTTON_STYLES.purple + " mt-4 self-center"} onClick={() => {
                                     setModoTorneoManual(true);
                                 }}>
                                     Modo torneo
@@ -488,7 +489,7 @@ export default function AprendeConPipo() {
                                         placeholder="Escribe tu respuesta aquí"
                                         disabled={bloqueado}
                                     />
-                                    <button className="bg-green-500 text-white px-4 py-2 rounded" onClick={comprobarRespuesta} disabled={bloqueado}>
+                                    <button className={BUTTON_STYLES.success} onClick={comprobarRespuesta} disabled={bloqueado}>
                                         Comprobar respuesta
                                     </button>
                                     {feedback && <div className="mt-2 font-bold">{feedback}</div>}
@@ -520,7 +521,7 @@ export default function AprendeConPipo() {
                     ) : (
                         <div className="mt-4">
                             <ChampionshipQuiz userGrade={cursoCompeticion} userSchool={centroCompeticion} />
-                            <button className="bg-gray-500 text-white px-4 py-2 rounded mt-4" onClick={() => setModoCompeticion(false)}>
+                            <button className={BUTTON_STYLES.secondary + " mt-4"} onClick={() => setModoCompeticion(false)}>
                                 Salir de competición
                             </button>
                         </div>

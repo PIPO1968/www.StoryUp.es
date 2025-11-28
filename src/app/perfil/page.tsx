@@ -4,6 +4,7 @@ import { renderNick } from "@/utils/renderNick";
 import { TROFEOS_PREMIUM } from "@/data/trofeosPremiumImport";
 import { useTranslation } from "@/utils/i18n";
 import { useRouter } from "next/navigation";
+import { BUTTON_STYLES } from "../../utils/styles";
 
 interface Usuario {
     nick: string;
@@ -852,7 +853,7 @@ const PerfilUsuario: React.FC = () => {
                                                 disabled={!selectedUser}
                                             />
                                             <button
-                                                className="bg-green-500 text-white px-4 py-2 rounded-r font-semibold"
+                                                className={BUTTON_STYLES.successBold + " rounded-r"}
                                                 disabled={!selectedUser || !chatInput.trim()}
                                                 onClick={() => {
                                                     if (selectedUser && chatInput.trim() && user && user.nick) {
@@ -928,10 +929,10 @@ const PerfilUsuario: React.FC = () => {
                                         />
                                         <button
                                             type="button"
-                                            className="bg-gray-200 text-gray-700 px-4 py-2 rounded font-semibold border"
+                                            className={BUTTON_STYLES.lightGray}
                                             onClick={() => document.getElementById('noticia-imagen')?.click()}
                                         >Seleccionar imagen</button>
-                                        <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded font-semibold">Publicar noticia</button>
+                                        <button type="submit" className={BUTTON_STYLES.primaryBold}>Publicar noticia</button>
                                     </div>
                                 </form>
                             </div>
@@ -963,7 +964,7 @@ const PerfilUsuario: React.FC = () => {
                                             <label className="text-sm mb-1">{t('fechaFin')}</label>
                                             <input type="date" className="border rounded px-3 py-2" value={fechaFin} onChange={e => setFechaFin(e.target.value)} />
                                         </div>
-                                        <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded font-semibold">{t('enviar')}</button>
+                                        <button type="submit" className={BUTTON_STYLES.primaryBold}>{t('enviar')}</button>
                                     </div>
                                 </form>
                             </div>
@@ -1007,7 +1008,7 @@ const PerfilUsuario: React.FC = () => {
                                     ))}
                                 </select>
                                 <button
-                                    className="bg-green-500 text-white px-4 py-2 rounded font-semibold text-sm"
+                                    className={BUTTON_STYLES.successBold + " text-sm"}
                                     onClick={handleAsignarGanador}
                                     disabled={!concursoSeleccionado || !ganadorSeleccionado}
                                 >
@@ -1103,7 +1104,7 @@ const PerfilUsuario: React.FC = () => {
                                             value={palabraProhibida}
                                             onChange={e => setPalabraProhibida(e.target.value)}
                                         />
-                                        <button type="submit" className="bg-red-500 text-white px-4 py-2 rounded font-semibold whitespace-nowrap">Seleccionar</button>
+                                        <button type="submit" className={BUTTON_STYLES.dangerBold + " whitespace-nowrap"}>Seleccionar</button>
                                     </div>
                                 </form>
                                 <h4 className="text-lg font-semibold mt-6 text-center">{t('sistemaAntibullying')}</h4>
@@ -1166,7 +1167,7 @@ const PerfilUsuario: React.FC = () => {
                                         ))}
                                 </select>
                                 <button
-                                    className="bg-pink-500 text-white px-4 py-2 rounded font-semibold"
+                                    className={BUTTON_STYLES.pinkBold}
                                     disabled={!selectedUser}
                                     onClick={() => selectedUser && updateLikes(selectedUser, 1)}
                                 >Añadir like</button>
@@ -1187,7 +1188,7 @@ const PerfilUsuario: React.FC = () => {
                                         ))}
                                     </select>
                                     <button
-                                        className="bg-yellow-500 text-white px-4 py-2 rounded font-semibold mt-1"
+                                        className={BUTTON_STYLES.warningBold + " mt-1"}
                                         disabled={!selectedUser || trofeoSeleccionado === ""}
                                         onClick={() => {
                                             if (trofeoSeleccionado.startsWith("normal-")) {
@@ -1200,7 +1201,7 @@ const PerfilUsuario: React.FC = () => {
                                         Desbloquear trofeo
                                     </button>
                                     <button
-                                        className="bg-red-500 text-white px-4 py-2 rounded font-semibold mt-1"
+                                        className={BUTTON_STYLES.dangerBold + " mt-1"}
                                         disabled={!selectedUser || trofeoSeleccionado === ""}
                                         onClick={() => {
                                             if (trofeoSeleccionado.startsWith("normal-")) {

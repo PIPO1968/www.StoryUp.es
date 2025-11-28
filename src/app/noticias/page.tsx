@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { renderNick } from "@/utils/renderNick";
+import { CARD_STYLES } from "@/utils/styles";
 
 export default function Noticias() {
     type Noticia = {
@@ -26,7 +27,7 @@ export default function Noticias() {
         ? noticias.map((noticia, idx) => {
             console.log(`Procesando noticia ${idx + 1}:`, noticia);
             return (
-                <div key={idx} className="bg-white rounded-lg shadow-md p-6">
+                <div key={idx} className={CARD_STYLES.default}>
                     <div className="flex items-center justify-between mb-2">
                         <span className="font-bold text-lg text-blue-700">{noticia.titulo || 'Título no disponible'}</span>
                         {noticia.autor && (
