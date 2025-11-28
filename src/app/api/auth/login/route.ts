@@ -65,8 +65,9 @@ export async function POST(request: NextRequest) {
         response.cookies.set('auth-token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 60 * 60 * 24 * 7 // 7 días
+            sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+            maxAge: 60 * 60 * 24 * 7, // 7 días
+            domain: process.env.NODE_ENV === 'production' ? '.storyup.es' : undefined
         });
 
         return response;

@@ -1,36 +1,94 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# StoryUp - Red Social Educativa
 
-## Getting Started
+Una plataforma educativa interactiva para estudiantes de primaria con funcionalidades de red social, aprendizaje y competiciones.
 
-First, run the development server:
+## 🚀 Despliegue en Producción
+
+### Requisitos Previos
+
+- Node.js 18+
+- PostgreSQL (Railway recomendado)
+- Cuenta en Railway o Vercel
+
+### Variables de Entorno
+
+Copia `.env.example` a `.env` y configura:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Variables requeridas:
+- `DATABASE_URL`: URL de PostgreSQL
+- `JWT_SECRET`: Clave secreta para tokens JWT
+- `NEXT_PUBLIC_APP_URL`: URL de producción (https://www.storyup.es)
+- `NODE_ENV`: production
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Despliegue en Railway
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Conectar repositorio:**
+   ```bash
+   railway login
+   railway link
+   ```
 
-## Learn More
+2. **Configurar variables de entorno:**
+   ```bash
+   railway variables set DATABASE_URL="tu-database-url"
+   railway variables set JWT_SECRET="tu-jwt-secret"
+   railway variables set NEXT_PUBLIC_APP_URL="https://www.storyup.es"
+   railway variables set NODE_ENV="production"
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+3. **Desplegar:**
+   ```bash
+   railway deploy
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Despliegue Local para Desarrollo
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm install
+npm run postinstall  # Genera cliente Prisma
+npm run dev
+```
 
-## Deploy on Vercel
+### Build de Producción
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run build  # Incluye migraciones de DB y seed
+npm start
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📁 Estructura del Proyecto
+
+- `src/app/`: Páginas y APIs de Next.js
+- `src/components/`: Componentes React
+- `prisma/`: Esquema de base de datos
+- `public/`: Archivos estáticos
+
+## 🛠️ Tecnologías
+
+- **Frontend:** Next.js 16, React 19, TypeScript
+- **Backend:** Next.js API Routes
+- **Base de datos:** PostgreSQL con Prisma ORM
+- **Autenticación:** JWT con cookies httpOnly
+- **Estilos:** Tailwind CSS
+
+## 📚 Funcionalidades
+
+- 👤 Perfiles de usuario
+- 📖 Creación de historias
+- 📰 Sistema de noticias
+- 🏆 Competiciones y torneos
+- 💬 Chat entre usuarios
+- 🎖️ Sistema de trofeos
+- 👑 Modo Premium
+
+## 🤝 Contribución
+
+1. Fork el proyecto
+2. Crea una rama (`git checkout -b feature/nueva-funcionalidad`)
+3. Commit cambios (`git commit -am 'Agrega nueva funcionalidad'`)
+4. Push (`git push origin feature/nueva-funcionalidad`)
+5. Abre un Pull Request
