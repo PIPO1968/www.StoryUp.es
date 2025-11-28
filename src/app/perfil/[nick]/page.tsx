@@ -13,51 +13,52 @@ export default function PerfilPorNick() {
     const [user, setUser] = useState<any>(null); // El usuario logueado
     const [esAmigo, setEsAmigo] = useState(false);
     const [solicitudPendiente, setSolicitudPendiente] = useState(false);
+    const [loading, setLoading] = useState(true);
 
-    const isPerfilPremium = perfil ? (() => {
-        const premiumData = localStorage.getItem(`premium_${perfil.nick}`);
-        if (premiumData) {
-            try {
-                const data = JSON.parse(premiumData);
-                return data.activo === true;
-            } catch {
-                return false;
-            }
-        }
-        return false;
-    })() : false;
+    const isPerfilPremium = perfil?.premium || false;
 
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            const userStr = localStorage.getItem("user");
-            const usersStr = localStorage.getItem("users");
-            if (!userStr || !usersStr) return;
-            const userObj = JSON.parse(userStr);
-            setUser(userObj);
-            const usersArr = JSON.parse(usersStr);
-            const perfilObj = usersArr.find((u: any) => u.nick === nick);
-            if (!perfilObj) {
+        const loadData = async () => {
+            try {
+                setLoading(true);
+
+                // Obtener usuario actual
+                const userResponse = await fetch('/api/auth/me');
+                if (userResponse.ok) {
+                    const userData = await userResponse.json();
+                    setUser(userData.user);
+                }
+
+                // Obtener perfil del usuario solicitado
+                const perfilResponse = await fetch(`/api/user/profile?nick=${encodeURIComponent(nick)}`);
+                if (perfilResponse.ok) {
+                    const perfilData = await perfilResponse.json();
+                    setPerfil(perfilData.user);
+                } else {
+                    setPerfil(null);
+                }
+
+            } catch (error) {
+                console.error('Error loading profile:', error);
                 setPerfil(null);
-                return;
+            } finally {
+                setLoading(false);
             }
-            setPerfil(perfilObj);
-            // Amistad
-            const amigosStr = localStorage.getItem(`amigos_${userObj.nick}`);
-            let amigos = [];
-            if (amigosStr) {
-                try { amigos = JSON.parse(amigosStr); } catch { }
-            }
-            setEsAmigo(amigos.some((a: any) => a.nick === perfilObj.nick));
-            // Verificar si hay solicitud pendiente
-            const solicitudesGuardadas = localStorage.getItem(`solicitudes_${perfilObj.nick}`);
-            let solicitudes = [];
-            if (solicitudesGuardadas) {
-                try { solicitudes = JSON.parse(solicitudesGuardadas); } catch { }
-            }
-            setSolicitudPendiente(solicitudes.some((s: any) => s.origen === userObj.nick && s.estado === "pendiente"));
-            // Likes y comentarios (puedes mantener tu lógica aquí)
+        };
+
+        if (nick) {
+            loadData();
         }
     }, [nick]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-red-100 p-8 flex flex-col items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900 mx-auto mb-4"></div>
+                <p>Cargando perfil...</p>
+            </div>
+        );
+    }
 
     if (!perfil) {
         return (
@@ -84,8 +85,8 @@ export default function PerfilPorNick() {
             )}
 
             <div className={`max-w-lg mx-auto bg-white rounded-lg shadow-md p-6 flex flex-col items-center relative transition-all duration-500 ${isPerfilPremium
-                    ? 'border-4 border-yellow-400 shadow-2xl shadow-yellow-400/50 animate-pulse overflow-hidden'
-                    : ''
+                ? 'border-4 border-yellow-400 shadow-2xl shadow-yellow-400/50 animate-pulse overflow-hidden'
+                : ''
                 }`}>
                 {/* Efecto de partículas para premium */}
                 {isPerfilPremium && (
@@ -112,8 +113,8 @@ export default function PerfilPorNick() {
                 <div className="flex flex-col items-center mb-4 relative">
                     <div className={`relative ${isPerfilPremium ? '' : ''}`}>
                         <img src={perfil.avatar || "/avatars/default.png"} alt="Avatar" className={`w-20 h-20 rounded-full mb-2 transition-all duration-300 ${isPerfilPremium
-                                ? 'ring-4 ring-yellow-400 ring-opacity-70 shadow-lg shadow-yellow-400/50 hover:scale-110'
-                                : ''
+                            ? 'ring-4 ring-yellow-400 ring-opacity-70 shadow-lg shadow-yellow-400/50 hover:scale-110'
+                            : ''
                             }`} />
                         {isPerfilPremium && (
                             <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-xs animate-bounce">
