@@ -6,54 +6,38 @@ export default function CreaNoticia() {
     const [contenido, setContenido] = useState("");
     const [enviando, setEnviando] = useState(false);
 
-    const handleEnviar = () => {
+    const handleEnviar = async () => {
         setEnviando(true);
-        let autor = "";
-        if (typeof window !== "undefined") {
-            // Buscar nick en usuarioActual y si no, en user
-            const actual = localStorage.getItem("usuarioActual");
-            if (actual) {
-                try {
-                    const obj = JSON.parse(actual);
-                    autor = obj.nick || "";
-                } catch {
-                    autor = "";
-                }
+        // Obtener usuario actual
+        try {
+            const response = await fetch('/api/auth/me');
+            const data = await response.json();
+            if (!data.user) {
+                alert("No se ha detectado usuario. Inicia sesión.");
+                setEnviando(false);
+                return;
             }
-            if (!autor) {
-                const userStr = localStorage.getItem("user");
-                if (userStr) {
-                    try {
-                        const userObj = JSON.parse(userStr);
-                        autor = userObj.nick || "";
-                    } catch {
-                        autor = "";
-                    }
-                }
-            }
-        }
-        if (!autor) {
-            alert("No se ha detectado usuario. Inicia sesión como docente o alumno.");
+            const autorNick = data.user.nick;
+
+            await fetch('/api/noticias', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    titulo,
+                    contenido,
+                    autorNick
+                })
+            });
+
+            alert("Noticia enviada!");
+            setTitulo("");
+            setContenido("");
+        } catch (error) {
+            console.error('Error creando noticia:', error);
+            alert("Error enviando noticia");
+        } finally {
             setEnviando(false);
-            return;
         }
-        const nuevaNoticia = {
-            titulo,
-            contenido,
-            autor,
-            fecha: new Date().toLocaleString(),
-        };
-        let noticias = [];
-        if (typeof window !== "undefined") {
-            const guardadas = localStorage.getItem("noticias");
-            noticias = guardadas ? JSON.parse(guardadas) : [];
-            noticias.unshift(nuevaNoticia);
-            localStorage.setItem("noticias", JSON.stringify(noticias));
-        }
-        alert("Noticia enviada!");
-        setTitulo("");
-        setContenido("");
-        setEnviando(false);
     };
 
     return (

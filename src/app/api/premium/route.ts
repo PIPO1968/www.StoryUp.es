@@ -5,7 +5,44 @@ const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest) {
     try {
-        const { action, nick } = await request.json();
+        const { action, nick, solicitudId, motivo } = await request.json();
+
+        if (action === 'approve' || action === 'reject') {
+            if (!solicitudId) {
+                return NextResponse.json({ error: 'ID de solicitud requerido' }, { status: 400 });
+            }
+
+            const solicitud = await prisma.solicitudPremium.findUnique({
+                where: { id: solicitudId },
+                include: { user: true }
+            });
+
+            if (!solicitud) {
+                return NextResponse.json({ error: 'Solicitud no encontrada' }, { status: 404 });
+            }
+
+            if (action === 'approve') {
+                // Activar premium
+                await prisma.user.update({
+                    where: { id: solicitud.userId },
+                    data: { premium: true }
+                });
+
+                await prisma.solicitudPremium.update({
+                    where: { id: solicitudId },
+                    data: { estado: 'aprobado' }
+                });
+
+                return NextResponse.json({ message: `Premium aprobado para ${solicitud.user.nick}` });
+            } else {
+                await prisma.solicitudPremium.update({
+                    where: { id: solicitudId },
+                    data: { estado: 'rechazado' }
+                });
+
+                return NextResponse.json({ message: `Solicitud rechazada para ${solicitud.user.nick}` });
+            }
+        }
 
         if (!nick) {
             return NextResponse.json({ error: 'Nick requerido' }, { status: 400 });

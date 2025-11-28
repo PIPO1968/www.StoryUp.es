@@ -630,7 +630,7 @@ export const I18nProvider = ({ children, defaultLang = "es" as Lang }: { childre
                     return;
                 }
             } catch (error) {
-                // No usar localStorage como fallback
+                // Sin fallback a localStorage
                 console.error('Error loading language:', error);
             }
 

@@ -352,8 +352,8 @@ export default function Estadisticas() {
                                             <span>🎯 Precisión promedio:</span>
                                             <span className="font-bold text-blue-600">{(() => {
                                                 if (currentUser) {
-                                                    const acertadas = (currentUser.preguntasAcertadas || 0) + parseInt(localStorage.getItem('acertadas_' + currentUser.nick) || '0', 10);
-                                                    const falladas = (currentUser.preguntasFalladas || 0) + parseInt(localStorage.getItem('falladas_' + currentUser.nick) || '0', 10);
+                                                    const acertadas = currentUser.respuestasAcertadas || 0;
+                                                    const falladas = 0; // No hay campo en DB
                                                     const total = acertadas + falladas;
                                                     return total > 0 ? ((acertadas / total) * 100).toFixed(1) + '%' : '0%';
                                                 }
@@ -380,12 +380,11 @@ export default function Estadisticas() {
                                         <li className="flex justify-between">
                                             <span>🏆 Tu ranking:</span>
                                             <span className="font-bold text-blue-600">{(() => {
-                                                const usersStr = localStorage.getItem("users");
-                                                if (usersStr && currentUser) {
-                                                    const usersArr = JSON.parse(usersStr);
-                                                    const usersWithPoints = usersArr.map((u: any) => ({
+                                                // Ranking basado en respuestasAcertadas
+                                                if (users.length > 0 && currentUser) {
+                                                    const usersWithPoints = users.map((u: any) => ({
                                                         ...u,
-                                                        puntosTotales: calcularPuntosTotales(u)
+                                                        puntosTotales: u.respuestasAcertadas || 0
                                                     }));
                                                     const sorted = usersWithPoints.sort((a: any, b: any) => b.puntosTotales - a.puntosTotales);
                                                     const position = sorted.findIndex((u: any) => u.nick === currentUser.nick) + 1;
@@ -403,66 +402,23 @@ export default function Estadisticas() {
                                     <ul className="space-y-2 text-sm">
                                         <li className="flex justify-between">
                                             <span>🔬 Matemáticas:</span>
-                                            <span className="font-bold text-green-600">{(() => {
-                                                if (currentUser) {
-                                                    const puntos = parseInt(localStorage.getItem(`matematicas_${currentUser.nick}`) || '0', 10);
-                                                    const nivel = Math.floor(puntos / 5) + 1;
-                                                    return `Nivel ${nivel}`;
-                                                }
-                                                return 'Nivel 1';
-                                            })()}</span>
+                                            <span className="font-bold text-green-600">Datos no disponibles</span>
                                         </li>
                                         <li className="flex justify-between">
                                             <span>📖 Lenguaje:</span>
-                                            <span className="font-bold text-green-600">{(() => {
-                                                if (currentUser) {
-                                                    const puntos = parseInt(localStorage.getItem(`lenguaje_${currentUser.nick}`) || '0', 10);
-                                                    const nivel = Math.floor(puntos / 5) + 1;
-                                                    return `Nivel ${nivel}`;
-                                                }
-                                                return 'Nivel 1';
-                                            })()}</span>
+                                            <span className="font-bold text-green-600">Datos no disponibles</span>
                                         </li>
                                         <li className="flex justify-between">
                                             <span>🌍 Geografía:</span>
-                                            <span className="font-bold text-green-600">{(() => {
-                                                if (currentUser) {
-                                                    const puntos = parseInt(localStorage.getItem(`geografia_${currentUser.nick}`) || '0', 10);
-                                                    const nivel = Math.floor(puntos / 5) + 1;
-                                                    return `Nivel ${nivel}`;
-                                                }
-                                                return 'Nivel 1';
-                                            })()}</span>
+                                            <span className="font-bold text-green-600">Datos no disponibles</span>
                                         </li>
                                         <li className="flex justify-between">
                                             <span>📚 Historia:</span>
-                                            <span className="font-bold text-green-600">{(() => {
-                                                if (currentUser) {
-                                                    const puntos = parseInt(localStorage.getItem(`historia_${currentUser.nick}`) || '0', 10);
-                                                    const nivel = Math.floor(puntos / 5) + 1;
-                                                    return `Nivel ${nivel}`;
-                                                }
-                                                return 'Nivel 1';
-                                            })()}</span>
+                                            <span className="font-bold text-green-600">Datos no disponibles</span>
                                         </li>
                                         <li className="flex justify-between">
                                             <span>🎨 Tu fuerte:</span>
-                                            <span className="font-bold text-green-600">{(() => {
-                                                if (currentUser) {
-                                                    const asignaturas = [
-                                                        { nombre: 'Matemáticas', puntos: parseInt(localStorage.getItem(`matematicas_${currentUser.nick}`) || '0', 10) },
-                                                        { nombre: 'Lenguaje', puntos: parseInt(localStorage.getItem(`lenguaje_${currentUser.nick}`) || '0', 10) },
-                                                        { nombre: 'Geografía', puntos: parseInt(localStorage.getItem(`geografia_${currentUser.nick}`) || '0', 10) },
-                                                        { nombre: 'Historia', puntos: parseInt(localStorage.getItem(`historia_${currentUser.nick}`) || '0', 10) },
-                                                        { nombre: 'Literatura', puntos: parseInt(localStorage.getItem(`literatura_${currentUser.nick}`) || '0', 10) },
-                                                        { nombre: 'Inglés', puntos: parseInt(localStorage.getItem(`ingles_${currentUser.nick}`) || '0', 10) },
-                                                        { nombre: 'Naturaleza', puntos: parseInt(localStorage.getItem(`naturaleza_${currentUser.nick}`) || '0', 10) }
-                                                    ];
-                                                    const mejor = asignaturas.reduce((max, actual) => actual.puntos > max.puntos ? actual : max);
-                                                    return mejor.puntos > 0 ? mejor.nombre : 'Ninguna aún';
-                                                }
-                                                return 'Ninguna aún';
-                                            })()}</span>
+                                            <span className="font-bold text-green-600">Datos no disponibles</span>
                                         </li>
                                     </ul>
                                 </div>
@@ -475,8 +431,8 @@ export default function Estadisticas() {
                                             <span>📈 Crecimiento:</span>
                                             <span className="font-bold text-purple-600">{(() => {
                                                 if (currentUser) {
-                                                    const acertadas = currentUser.preguntasAcertadas || 0;
-                                                    const falladas = (currentUser.preguntasFalladas || 0) + parseInt(localStorage.getItem('falladas_' + currentUser.nick) || '0', 10);
+                                                    const acertadas = currentUser.respuestasAcertadas || 0;
+                                                    const falladas = 0;
                                                     const total = acertadas + falladas;
                                                     if (total > 0) {
                                                         const precision = (acertadas / total) * 100;
@@ -491,8 +447,8 @@ export default function Estadisticas() {
                                             <span>🎯 Meta semanal:</span>
                                             <span className="font-bold text-purple-600">{(() => {
                                                 if (currentUser) {
-                                                    const acertadas = (currentUser.preguntasAcertadas || 0) + parseInt(localStorage.getItem('acertadas_' + currentUser.nick) || '0', 10);
-                                                    const falladas = (currentUser.preguntasFalladas || 0) + parseInt(localStorage.getItem('falladas_' + currentUser.nick) || '0', 10);
+                                                    const acertadas = currentUser.respuestasAcertadas || 0;
+                                                    const falladas = 0;
                                                     const total = acertadas + falladas;
                                                     if (total > 0) {
                                                         const precision = (acertadas / total) * 100;
@@ -525,9 +481,8 @@ export default function Estadisticas() {
                                     {[...Array(7)].map((_, i) => {
                                         const dayActivities = (() => {
                                             if (currentUser) {
-                                                const acertadas = parseInt(localStorage.getItem('acertadas_' + currentUser.nick) || '0', 10);
-                                                const falladas = parseInt(localStorage.getItem('falladas_' + currentUser.nick) || '0', 10);
-                                                const total = acertadas + falladas;
+                                                const acertadas = currentUser.respuestasAcertadas || 0;
+                                                const total = acertadas;
 
                                                 // Simular actividad distribuida a lo largo de la semana
                                                 const baseActivity = Math.floor(total / 7);
@@ -561,8 +516,8 @@ export default function Estadisticas() {
                                 <div className="text-center mt-3 text-sm text-indigo-600">
                                     📈 <strong>Tendencia:</strong> {(() => {
                                         if (currentUser) {
-                                            const acertadas = (currentUser.preguntasAcertadas || 0) + parseInt(localStorage.getItem('acertadas_' + currentUser.nick) || '0', 10);
-                                            const falladas = (currentUser.preguntasFalladas || 0) + parseInt(localStorage.getItem('falladas_' + currentUser.nick) || '0', 10);
+                                            const acertadas = currentUser.respuestasAcertadas || 0;
+                                            const falladas = 0;
                                             const precision = falladas + acertadas > 0 ? (acertadas / (falladas + acertadas)) * 100 : 0;
 
                                             if (precision >= 80) return '¡Excelente! Mantén este nivel de precisión.';
@@ -585,7 +540,7 @@ export default function Estadisticas() {
                                         <div className="font-bold text-yellow-600">{(() => {
                                             const usersWithPoints = users.map((u: any) => ({
                                                 ...u,
-                                                puntosTotales: calcularPuntosTotales(u)
+                                                puntosTotales: u.respuestasAcertadas || 0
                                             }));
                                             const sorted = usersWithPoints.sort((a: any, b: any) => b.puntosTotales - a.puntosTotales);
                                             return sorted[0]?.puntosTotales || 0;
@@ -593,7 +548,7 @@ export default function Estadisticas() {
                                         <div className="text-xs text-gray-500">{(() => {
                                             const usersWithPoints = users.map((u: any) => ({
                                                 ...u,
-                                                puntosTotales: calcularPuntosTotales(u)
+                                                puntosTotales: u.respuestasAcertadas || 0
                                             }));
                                             const sorted = usersWithPoints.sort((a: any, b: any) => b.puntosTotales - a.puntosTotales);
                                             return sorted[0]?.nick || 'Nadie';
@@ -602,12 +557,12 @@ export default function Estadisticas() {
                                     <div className="bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg p-3 border-2 border-blue-300">
                                         <div className="text-2xl">👑</div>
                                         <div className="text-xs text-blue-600 font-bold">TÚ</div>
-                                        <div className="font-bold text-blue-600">{currentUser ? calcularPuntosTotales(currentUser) : 0}</div>
+                                        <div className="font-bold text-blue-600">{currentUser ? (currentUser.respuestasAcertadas || 0) : 0}</div>
                                         <div className="text-xs text-blue-500">{(() => {
                                             if (currentUser) {
                                                 const usersWithPoints = users.map((u: any) => ({
                                                     ...u,
-                                                    puntosTotales: calcularPuntosTotales(u)
+                                                    puntosTotales: u.respuestasAcertadas || 0
                                                 }));
                                                 const sorted = usersWithPoints.sort((a: any, b: any) => b.puntosTotales - a.puntosTotales);
                                                 const position = sorted.findIndex((u: any) => u.nick === currentUser.nick) + 1;
@@ -620,7 +575,7 @@ export default function Estadisticas() {
                                         <div className="text-2xl">🎯</div>
                                         <div className="text-xs text-gray-600">Promedio</div>
                                         <div className="font-bold text-gray-600">{(() => {
-                                            const total = users.reduce((sum: number, u: any) => sum + calcularPuntosTotales(u), 0);
+                                            const total = users.reduce((sum: number, u: any) => sum + (u.respuestasAcertadas || 0), 0);
                                             return Math.floor(total / users.length);
                                         })()}</div>
                                         <div className="text-xs text-gray-500">{(() => {
@@ -632,9 +587,9 @@ export default function Estadisticas() {
                                 <div className="mt-3 text-center text-sm">
                                     {(() => {
                                         if (currentUser) {
-                                            const total = users.reduce((sum: number, u: any) => sum + calcularPuntosTotales(u), 0);
+                                            const total = users.reduce((sum: number, u: any) => sum + (u.respuestasAcertadas || 0), 0);
                                             const promedio = Math.floor(total / users.length);
-                                            const tusPuntos = calcularPuntosTotales(currentUser);
+                                            const tusPuntos = currentUser.respuestasAcertadas || 0;
                                             const diferencia = tusPuntos - promedio;
 
                                             if (diferencia > 0) {

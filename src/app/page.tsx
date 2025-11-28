@@ -71,8 +71,10 @@ export default function Home() {
   const [showSidebar, setShowSidebar] = React.useState(false);
   React.useEffect(() => {
     // Si el usuario está conectado, mostrar el sidebar
-    const user = typeof window !== "undefined" ? localStorage.getItem("user") : null;
-    setShowSidebar(!!user);
+    fetch('/api/auth/me')
+      .then(response => response.ok ? response.json() : null)
+      .then(user => setShowSidebar(!!user))
+      .catch(() => setShowSidebar(false));
   }, []);
 
   return (

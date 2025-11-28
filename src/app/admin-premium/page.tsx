@@ -90,10 +90,11 @@ export default function AdminPremium() {
     }
 
     // Cargar solicitudes pendientes
-    const cargarSolicitudes = (): void => {
+    const cargarSolicitudes = async (): Promise<void> => {
         try {
-            const solicitudes: SolicitudPago[] = JSON.parse(localStorage.getItem('solicitudes_premium') || '[]');
-            setSolicitudesPendientes(solicitudes.filter((s: SolicitudPago) => s.estado === 'pendiente'));
+            const response = await fetch('/api/premium/solicitudes');
+            const solicitudes = await response.json();
+            setSolicitudesPendientes(solicitudes.filter((s: any) => s.estado === 'pendiente'));
             setMostrarSolicitudes(true);
         } catch (error) {
             console.error('Error al cargar solicitudes:', error);
@@ -102,42 +103,21 @@ export default function AdminPremium() {
     };
 
     // Aprobar solicitud de pago (activar Premium)
-    const aprobarSolicitud = (solicitud: SolicitudPago): void => {
+    const aprobarSolicitud = async (solicitud: SolicitudPago): Promise<void> => {
         try {
-            // Activar Premium para el usuario
-            const fechaExpiracion = new Date();
-            fechaExpiracion.setFullYear(fechaExpiracion.getFullYear() + 1);
+            const response = await fetch('/api/premium', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'approve', solicitudId: solicitud.id })
+            });
 
-            const premiumData = {
-                activo: true,
-                fechaInicio: new Date().toISOString(),
-                expiracion: fechaExpiracion.toISOString(),
-                tipo: solicitud.tipo,
-                precio: solicitud.precio,
-                metodoPago: solicitud.metodoPago,
-                activadoPorAdmin: true,
-                solicitudId: solicitud.id,
-                emailPago: solicitud.email
-            };
-
-            localStorage.setItem(`premium_${solicitud.nick}`, JSON.stringify(premiumData));
-
-            // Marcar solicitud como aprobada
-            const todasSolicitudes: SolicitudPago[] = JSON.parse(localStorage.getItem('solicitudes_premium') || '[]');
-            const solicitudIndex = todasSolicitudes.findIndex((s: SolicitudPago) => s.id === solicitud.id);
-            if (solicitudIndex !== -1) {
-                todasSolicitudes[solicitudIndex].estado = 'aprobado';
-                todasSolicitudes[solicitudIndex].fechaAprobacion = new Date().toISOString();
-                localStorage.setItem('solicitudes_premium', JSON.stringify(todasSolicitudes));
+            const data = await response.json();
+            if (response.ok) {
+                setMensaje(`🎉 ${data.message}`);
+                cargarSolicitudes(); // Recargar lista
+            } else {
+                setMensaje(`❌ ${data.error}`);
             }
-
-            setMensaje(`🎉 Premium activado para ${solicitud.nick} tras verificar pago de €${solicitud.precio}`);
-            cargarSolicitudes(); // Recargar lista
-
-            // Disparar eventos para actualizar componentes
-            window.dispatchEvent(new Event('storage'));
-            window.dispatchEvent(new CustomEvent('premiumUpdate', { detail: { nick: solicitud.nick, action: 'add' } }));
-
         } catch (error) {
             console.error('Error al aprobar solicitud:', error);
             setMensaje("❌ Error al aprobar la solicitud");
@@ -145,20 +125,21 @@ export default function AdminPremium() {
     };
 
     // Rechazar solicitud
-    const rechazarSolicitud = (solicitud: SolicitudPago, motivo: string = 'Pago no verificado'): void => {
+    const rechazarSolicitud = async (solicitud: SolicitudPago, motivo: string = 'Pago no verificado'): Promise<void> => {
         try {
-            const todasSolicitudes: SolicitudPago[] = JSON.parse(localStorage.getItem('solicitudes_premium') || '[]');
-            const solicitudIndex = todasSolicitudes.findIndex((s: SolicitudPago) => s.id === solicitud.id);
-            if (solicitudIndex !== -1) {
-                todasSolicitudes[solicitudIndex].estado = 'rechazado';
-                todasSolicitudes[solicitudIndex].fechaRechazo = new Date().toISOString();
-                todasSolicitudes[solicitudIndex].motivo = motivo;
-                localStorage.setItem('solicitudes_premium', JSON.stringify(todasSolicitudes));
+            const response = await fetch('/api/premium', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'reject', solicitudId: solicitud.id, motivo })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                setMensaje(`❌ ${data.message}`);
+                cargarSolicitudes(); // Recargar lista
+            } else {
+                setMensaje(`❌ ${data.error}`);
             }
-
-            setMensaje(`❌ Solicitud rechazada para ${solicitud.nick}: ${motivo}`);
-            cargarSolicitudes(); // Recargar lista
-
         } catch (error) {
             console.error('Error al rechazar solicitud:', error);
             setMensaje("❌ Error al rechazar la solicitud");
@@ -376,15 +357,15 @@ export default function AdminPremium() {
                                         <div key={solicitud.id} className="bg-white border border-gray-200 rounded-lg p-4">
                                             <div className="flex justify-between items-start mb-3">
                                                 <div className="flex-1">
-                                                    <h4 className="font-bold text-lg text-gray-800">{solicitud.nick}</h4>
-                                                    <p className="text-sm text-gray-600">{solicitud.email}</p>
+                                                    <h4 className="font-bold text-lg text-gray-800">{solicitud.user.nick}</h4>
+                                                    <p className="text-sm text-gray-600">{solicitud.user.email}</p>
                                                     <p className="text-xs text-gray-500 mt-1">
-                                                        📅 {new Date(solicitud.fechaSolicitud).toLocaleString()}
+                                                        📅 {new Date(solicitud.createdAt).toLocaleString()}
                                                     </p>
                                                 </div>
                                                 <div className="text-right">
                                                     <span className="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
-                                                        {solicitud.metodoPago.toUpperCase()} €{solicitud.precio}
+                                                        Pendiente
                                                     </span>
                                                 </div>
                                             </div>

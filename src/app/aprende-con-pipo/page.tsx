@@ -13,7 +13,7 @@ async function getTablaDocentes(temporada: number) {
         const resultado: Record<string, number> = {};
         for (const docente of docentes) {
             try {
-                const statsResponse = await fetch(`/api/stats/championship?nick=${docente.nick}&temporada=t${temporada}&tipo=individual`);
+                const statsResponse = await fetch(`/api/stats/championship?nick=${docente.nick}&temporada=t${temporada}&tipo=docentes`);
                 if (statsResponse.ok) {
                     const stats = await statsResponse.json();
                     if (stats.likes) {
@@ -533,7 +533,7 @@ export default function AprendeConPipo() {
 
     // Función para manejar la finalización del torneo premium
     const handleTournamentComplete = (aciertos: number, puntuacionTotal: number) => {
-        // Simplified: just show result without saving to localStorage
+        // Sin guardar en localStorage
         alert(`¡Torneo completado!\n\nAciertos: ${aciertos}/25\nPuntuación total: ${puntuacionTotal} puntos\n\nLos resultados se han guardado. ¡Buen trabajo!`);
         // Redirigir de vuelta a torneos premium
         window.location.href = '/torneos-premium';

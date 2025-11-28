@@ -50,6 +50,11 @@ model User {
   premios       PremioMensual[]
   torneosGanados Torneo[] @relation("torneosGanados")
   stats         UserStats?
+  championshipResults ChampionshipResult[]
+  premiumData   PremiumData?
+  torneoPremium TorneoPremium?
+  competicionPremium CompeticionPremium?
+  userTrofeos   UserTrofeo[]
 
   @@map("users")
 }
@@ -113,8 +118,14 @@ model Campeonato {
 
 model Concurso {
   id          Int      @id @default(autoincrement())
-  nombre      String
-  descripcion String?
+  numero      Int
+  titulo      String
+  texto       String
+  inicio      DateTime
+  fin        DateTime
+  autor       String
+  ganador     String?
+  fechaFinal  DateTime?
   userId      Int
   user        User     @relation(fields: [userId], references: [id])
   createdAt   DateTime @default(now())
@@ -159,8 +170,12 @@ model PalabraProhibida {
 
 model PremioMensual {
   id          Int      @id @default(autoincrement())
+  year        Int
+  month       Int
+  centro      String
+  posicion    Int
+  titulo      String
   userId      Int
-  premio      String
   user        User     @relation(fields: [userId], references: [id])
   createdAt   DateTime @default(now())
 
@@ -215,4 +230,79 @@ model Trofeo {
   titulo      String
   descripcion String
   criterio    String
+  userTrofeos UserTrofeo[]
+}
+
+// Modelo para trofeos desbloqueados por usuario
+model UserTrofeo {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  trofeoId    Int
+  trofeo      Trofeo   @relation(fields: [trofeoId], references: [id])
+  desbloqueado Boolean @default(true)
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, trofeoId])
+  @@map("user_trofeos")
+}
+model PremiumData {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @unique
+  user        User     @relation(fields: [userId], references: [id])
+  fechaInicio DateTime?
+  fechaExpiracion DateTime?
+  activo      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("premium_data")
+}
+
+// Modelo para torneos premium del usuario
+model TorneoPremium {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @unique
+  user        User     @relation(fields: [userId], references: [id])
+  torneos     Json     // Lista de torneos disponibles
+  lastReset   DateTime?
+  torneoActivo Json?   // Información del torneo activo
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("torneos_premium")
+}
+
+// Modelo para estadísticas de competiciones premium
+model CompeticionPremium {
+  id              Int      @id @default(autoincrement())
+  userId          Int      @unique
+  user            User     @relation(fields: [userId], references: [id])
+  victorias       Int      @default(0)
+  participaciones Int      @default(0)
+  puntuacionTotal Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("competiciones_premium")
+}
+
+// Modelo para resultados de competiciones
+model ChampionshipResult {
+  id                  Int      @id @default(autoincrement())
+  userId              Int?
+  user                User?    @relation(fields: [userId], references: [id])
+  centro              String?
+  season              String   // ej. "t2025"
+  type                String   // "centros", "individual", "docentes"
+  ganados             Int      @default(0)
+  perdidos            Int      @default(0)
+  preguntasAcertadas  Int      @default(0)
+  preguntasFalladas   Int      @default(0)
+  likes               Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([userId, centro, season, type])
+  @@map("championship_results")
 }

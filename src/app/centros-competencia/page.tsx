@@ -151,120 +151,14 @@ export default function CentrosCompetencia() {
 
     // Función para obtener actividad de competiciones (campeonato)
     const obtenerActividadCompeticiones = (centro: string): number => {
-        if (typeof window === "undefined") return 0;
-
-        try {
-            let puntosCompeticion = 0;
-
-            // Buscar datos de campeonato individual por curso y temporada
-            const cursos = ['1primaria', '2primaria', '3primaria', '4primaria', '5primaria', '6primaria'];
-            const temporadaActual = new Date().getFullYear();
-
-            // Datos de estudiantes
-            cursos.forEach(curso => {
-                const key = `campeonato_individual_t${temporadaActual}`;
-                const datos = localStorage.getItem(key);
-                if (datos) {
-                    try {
-                        const campeonato = JSON.parse(datos);
-                        // Sumar puntos de usuarios del centro
-                        Object.keys(campeonato).forEach(nick => {
-                            const userData = localStorage.getItem('users');
-                            if (userData) {
-                                const usuarios = JSON.parse(userData);
-                                const usuario = usuarios.find((u: Usuario) => u.nick.toLowerCase().replace(/\s+/g, "") === nick);
-                                if (usuario && usuario.centro === centro) {
-                                    const datosUsuario = campeonato[nick];
-                                    puntosCompeticion += (Number(datosUsuario.ganados) || 0) * 10;
-                                    puntosCompeticion += (Number(datosUsuario.acertadas) || Number(datosUsuario.preguntasAcertadas) || 0) * 2;
-                                }
-                            }
-                        });
-                    } catch (e) {
-                        // Silent fail: no console logs to keep output clean for real data presentation
-                    }
-                }
-            });
-
-            // Agregar datos de docentes
-            const docentesKey = `campeonato_docentes_t${temporadaActual}`;
-            const datosDocentes = localStorage.getItem(docentesKey);
-            if (datosDocentes) {
-                try {
-                    const campeonatoDocentes = JSON.parse(datosDocentes);
-                    Object.keys(campeonatoDocentes).forEach(nick => {
-                        const userData = localStorage.getItem('users');
-                        if (userData) {
-                            const usuarios = JSON.parse(userData);
-                            const usuario = usuarios.find((u: Usuario) => u.nick.toLowerCase().replace(/\s+/g, "") === nick);
-                            if (usuario && usuario.centro === centro && usuario.tipo === "docente") {
-                                const datosUsuario = campeonatoDocentes[nick];
-                                // Los docentes obtienen más puntos por su liderazgo
-                                puntosCompeticion += (Number(datosUsuario.ganados) || 0) * 15;
-                                puntosCompeticion += (Number(datosUsuario.acertadas) || Number(datosUsuario.preguntasAcertadas) || 0) * 3;
-                                puntosCompeticion += (Number(datosUsuario.likes) || 0) * 5; // Bonus por engagement
-                            }
-                        }
-                    });
-                } catch (e) {
-                    // Silent fail
-                }
-            }
-
-            return puntosCompeticion;
-        } catch (error) {
-            return 0;
-        }
+        // Simplificado: no usar localStorage, calcular basado en respuestas acertadas
+        return 0; // TODO: implementar con API si necesario
     };
 
     // ✅ COMPETENCIAS POR ASIGNATURA: Función para obtener estadísticas específicas
     const obtenerEstadisticasAsignatura = (asignatura: string, usuarios: Usuario[], cursoFiltro?: string): { [centro: string]: number } => {
-        if (typeof window === "undefined") return {};
-
-        const estadisticasCentros: { [centro: string]: number } = {};
-
-        if (asignatura === "todas") {
-            return {};
-        }
-
-        // Solo buscar datos específicos reales por asignatura, no estimaciones
-        usuarios.forEach(usuario => {
-            if (!usuario.centro) return;
-
-            // ✅ FILTRAR POR CURSO si se especifica
-            if (cursoFiltro && cursoFiltro !== "todos" && usuario.curso !== cursoFiltro) {
-                return;
-            }
-
-            const centro = usuario.centro;
-            if (!estadisticasCentros[centro]) {
-                estadisticasCentros[centro] = 0;
-            }
-
-            // Buscar datos específicos por asignatura en localStorage
-            // Mapear de nombre display a nombre de localStorage
-            const mapaAsignaturasInverso: { [key: string]: string } = {
-                'Matemáticas': 'matematicas',
-                'Historia': 'historia',
-                'Geografía': 'geografia',
-                'Literatura': 'literatura',
-                'Inglés': 'ingles',
-                'Naturaleza': 'naturaleza',
-                'Lenguaje': 'lenguaje',
-                'General': 'general'
-            };
-
-            const asignaturaParaLocalStorage = mapaAsignaturasInverso[asignatura] || asignatura.toLowerCase();
-            const claveAsignatura = `${asignaturaParaLocalStorage}_${usuario.nick}`;
-            const datosAsignatura = localStorage.getItem(claveAsignatura);
-
-            if (datosAsignatura && parseInt(datosAsignatura, 10) > 0) {
-                // Solo usar datos reales específicos de la asignatura
-                estadisticasCentros[centro] += parseInt(datosAsignatura, 10);
-            }
-        });
-
-        return estadisticasCentros;
+        // Simplificado: no usar localStorage, devolver vacío
+        return {};
     };
 
     // Función auxiliar - todas las asignaturas tienen la misma dificultad
@@ -464,68 +358,7 @@ export default function CentrosCompetencia() {
 
     // ✅ SISTEMA DE PREMIOS: Función para obtener premios del mes actual
     const obtenerPremiosDelMes = (): any[] => {
-        if (typeof window === "undefined") return [];
-
-        const fechaActual = new Date();
-        const añoActual = fechaActual.getFullYear();
-        const mesActual = fechaActual.getMonth() + 1; // 1-12
-
-        // Clave para premios del mes actual
-        const clavePremiosActual = `premios_mensuales_${añoActual}_${mesActual.toString().padStart(2, '0')}`;
-
-        // Calcular mes anterior
-        let mesAnterior = mesActual - 1;
-        let añoAnterior = añoActual;
-        if (mesAnterior === 0) {
-            mesAnterior = 12;
-            añoAnterior = añoActual - 1;
-        }
-        const clavePremiosAnterior = `premios_mensuales_${añoAnterior}_${mesAnterior.toString().padStart(2, '0')}`;
-
-        // Si es un nuevo mes y no hay premios para el mes anterior, generarlos
-        if (!localStorage.getItem(clavePremiosAnterior)) {
-            const premiosGenerados = generarPremiosAutomaticos(mesAnterior, añoAnterior);
-            if (premiosGenerados.length > 0) {
-                try {
-                    localStorage.setItem(clavePremiosActual, JSON.stringify(premiosGenerados));
-                } catch (e) {
-                    // Silent fail
-                }
-            }
-        }
-
-        // Devolver premios del mes actual (que serán los del mes anterior si acabamos de generarlos)
-        const premiosGuardados = localStorage.getItem(clavePremiosActual);
-        if (premiosGuardados) {
-            try {
-                const parsed = JSON.parse(premiosGuardados);
-
-                // Normalizar premios (evitar que el campo `premio` sea un objeto)
-                const normalized = parsed.map((p: any) => {
-                    const prem = p?.premio;
-                    if (typeof prem === 'object' && prem !== null) {
-                        const fallback = normalizarValorPremio(prem);
-                        return { ...p, premio: fallback };
-                    }
-                    return p;
-                });
-
-                const needsMigration = normalized.some((p: any, idx: number) => typeof parsed[idx]?.premio === 'object' && parsed[idx]?.premio !== null);
-                if (needsMigration && !localStorage.getItem(`${clavePremiosActual}_migrated_v1`)) {
-                    try {
-                        localStorage.setItem(clavePremiosActual, JSON.stringify(normalized));
-                        localStorage.setItem(`${clavePremiosActual}_migrated_v1`, 'true');
-                    } catch (e) {
-                        // Silent fail
-                    }
-                }
-
-                return normalized;
-            } catch (error) {
-                // Silent fail
-            }
-        }
-
+        // Simplificado: no usar localStorage, devolver vacío
         return [];
     };
 
@@ -609,54 +442,18 @@ export default function CentrosCompetencia() {
 
     // ✅ SISTEMA DE PREMIOS: Función para asignar trofeos a usuarios de un centro
     const asignarTrofeoACentro = (nombreCentro: string, idTrofeo: number): void => {
-        if (typeof window === "undefined") return;
-
-        try {
-            const usersStr = localStorage.getItem("users");
-            if (!usersStr) return;
-
-            const users = JSON.parse(usersStr);
-            let usuariosActualizados = false;
-
-            // Asignar trofeo a todos los usuarios del centro
-            users.forEach((user: any) => {
-                if (user.centro === nombreCentro) {
-                    if (!user.trofeos) {
-                        user.trofeos = [];
-                    }
-                    if (!user.trofeos.includes(idTrofeo)) {
-                        user.trofeos.push(idTrofeo);
-                        usuariosActualizados = true;
-                    }
-                }
-            });
-
-            if (usuariosActualizados) {
-                localStorage.setItem("users", JSON.stringify(users));
-            }
-        } catch (error) {
-            // Silent fail
-        }
+        // Simplificado: no usar localStorage
     };
 
     // ✅ SISTEMA DE PREMIOS: Función para verificar si los trofeos ya fueron asignados este mes
     const trofeosYaAsignadosEsteMes = (): boolean => {
-        if (typeof window === "undefined") return false;
-
-        const fechaActual = new Date();
-        const claveTrofeosAsignados = `trofeos_asignados_${fechaActual.getFullYear()}_${(fechaActual.getMonth() + 1).toString().padStart(2, '0')}`;
-
-        return localStorage.getItem(claveTrofeosAsignados) === 'true';
+        // Simplificado: no usar localStorage
+        return false;
     };
 
     // ✅ SISTEMA DE PREMIOS: Función para marcar que los trofeos fueron asignados este mes
     const marcarTrofeosAsignadosEsteMes = (): void => {
-        if (typeof window === "undefined") return;
-
-        const fechaActual = new Date();
-        const claveTrofeosAsignados = `trofeos_asignados_${fechaActual.getFullYear()}_${(fechaActual.getMonth() + 1).toString().padStart(2, '0')}`;
-
-        localStorage.setItem(claveTrofeosAsignados, 'true');
+        // Simplificado: no usar localStorage
     };
 
     // ✅ SISTEMA DE PREMIOS: Función para verificar si un centro ganó premio
@@ -700,130 +497,31 @@ export default function CentrosCompetencia() {
 
     // Función para obtener meses disponibles en historial
     const obtenerMesesDisponibles = (): string[] => {
-        if (typeof window === "undefined") return [];
-
-        const meses = [];
-        const fechaActual = new Date();
-
-        // Agregar mes actual
-        const mesActual = `${fechaActual.getFullYear()}-${(fechaActual.getMonth() + 1).toString().padStart(2, '0')}`;
-        meses.push(mesActual);
-
-        // Buscar meses anteriores en localStorage
-        for (let i = 1; i <= 12; i++) {
-            const fecha = new Date(fechaActual);
-            fecha.setMonth(fecha.getMonth() - i);
-            const claveMes = generarClaveMes(fecha.getFullYear(), fecha.getMonth() + 1);
-
-            if (localStorage.getItem(claveMes)) {
-                const mesString = `${fecha.getFullYear()}-${(fecha.getMonth() + 1).toString().padStart(2, '0')}`;
-                meses.push(mesString);
-            }
-        }
-
-        return meses;
+        // Simplificado: no usar localStorage
+        return [];
     };
 
     // Función para guardar ranking mensual en historial
     const guardarRankingMensual = (centros: CentroStats[]) => {
-        if (typeof window === "undefined") return;
-
-        const fechaActual = new Date();
-        const claveMes = generarClaveMes(fechaActual.getFullYear(), fechaActual.getMonth() + 1);
-
-        const datosRanking = {
-            fecha: fechaActual.toISOString(),
-            año: fechaActual.getFullYear(),
-            mes: fechaActual.getMonth() + 1,
-            centros: centros,
-            ganador: centros[0]?.nombre || "N/A"
-        };
-
-        localStorage.setItem(claveMes, JSON.stringify(datosRanking));
+        // Simplificado: no guardar en localStorage
     };
 
     // Función para cargar ranking de un mes específico
     const cargarRankingMensual = (año: number, mes: number): CentroStats[] => {
-        if (typeof window === "undefined") return [];
-
-        const claveMes = generarClaveMes(año, mes);
-        const datos = localStorage.getItem(claveMes);
-
-        if (datos) {
-            try {
-                const ranking = JSON.parse(datos);
-                return ranking.centros || [];
-            } catch (error) {
-                // Silent fail
-            }
-        }
-
+        // Simplificado: no cargar de localStorage
         return [];
     };
 
     // Función para calcular ranking anual acumulativo
     const calcularRankingAnual = (): CentroStats[] => {
-        if (typeof window === "undefined") return [];
-
-        const fechaActual = new Date();
-        const añoActual = fechaActual.getFullYear();
-        const centrosAcumulados: { [nombre: string]: CentroStats } = {};
-
-        // Sumar puntos de todos los meses del año actual
-        for (let mes = 1; mes <= 12; mes++) {
-            const rankingMensual = cargarRankingMensual(añoActual, mes);
-
-            rankingMensual.forEach(centro => {
-                if (!centrosAcumulados[centro.nombre]) {
-                    centrosAcumulados[centro.nombre] = {
-                        ...centro,
-                        puntajeTotal: 0,
-                        ranking: 0
-                    };
-                }
-
-                centrosAcumulados[centro.nombre].puntajeTotal += Number(centro.puntajeTotal) || 0;
-                centrosAcumulados[centro.nombre].respuestasCorrectas += Number(centro.respuestasCorrectas) || 0;
-                centrosAcumulados[centro.nombre].concursosGanados += Number(centro.concursosGanados) || 0;
-                centrosAcumulados[centro.nombre].historiasCreadas += Number(centro.historiasCreadas) || 0;
-                centrosAcumulados[centro.nombre].interaccionesSociales += Number(centro.interaccionesSociales) || 0;
-            });
-        }
-
-        // Convertir a array y ordenar
-        const centrosArray = Object.values(centrosAcumulados)
-            .sort((a, b) => b.puntajeTotal - a.puntajeTotal);
-
-        // Asignar medallas y rankings
-        return asignarMedallas(centrosArray);
+        // Simplificado: no usar localStorage
+        return [];
     };
 
     // Función para obtener historial de ganadores
     const obtenerHistorialGanadores = (): any[] => {
-        if (typeof window === "undefined") return [];
-
-        const historial = [];
-        const fechaActual = new Date();
-
-        for (let i = 0; i < 12; i++) {
-            const fecha = new Date(fechaActual);
-            fecha.setMonth(fecha.getMonth() - i);
-
-            const rankingMensual = cargarRankingMensual(fecha.getFullYear(), fecha.getMonth() + 1);
-
-            if (rankingMensual.length > 0 && rankingMensual[0]) {
-                const ganador = rankingMensual[0];
-                historial.push({
-                    año: fecha.getFullYear(),
-                    mes: fecha.toLocaleDateString('es-ES', { month: 'long' }),
-                    centro: ganador.nombre || "Centro Desconocido",
-                    puntaje: ganador.puntajeTotal || 0,
-                    ranking: 1
-                });
-            }
-        }
-
-        return historial;
+        // Simplificado: no usar localStorage
+        return [];
     };
     const asignarMedallas = (centrosOrdenados: CentroStats[]): CentroStats[] => {
         return centrosOrdenados.map((centro, index) => {
@@ -847,11 +545,11 @@ export default function CentrosCompetencia() {
         const cargarDatos = async () => {
             try {
                 // Cargar usuario actual
-                const userData = localStorage.getItem('currentUser') || localStorage.getItem('user');
-                if (userData) {
-                    const user = JSON.parse(userData);
-                    setUsuario(user);
-                    setMiCentro(user.centro || "");
+                const userResponse = await fetch('/api/auth/me');
+                const userData = await userResponse.json();
+                if (userData.user) {
+                    setUsuario(userData.user);
+                    setMiCentro(userData.user.centro || "");
                 }
 
                 // Cargar datos históricos
@@ -884,31 +582,8 @@ export default function CentrosCompetencia() {
 
                 // ✅ VERIFICAR SI HAY DATOS PARA LA ASIGNATURA SELECCIONADA
                 if (asignaturaSeleccionada !== "todas") {
-                    // Verificar si hay datos específicos por asignatura
-                    const mapaAsignaturasInverso: { [key: string]: string } = {
-                        'Matemáticas': 'matematicas',
-                        'Historia': 'historia',
-                        'Geografía': 'geografia',
-                        'Literatura': 'literatura',
-                        'Inglés': 'ingles',
-                        'Naturaleza': 'naturaleza',
-                        'Lenguaje': 'lenguaje',
-                        'General': 'general'
-                    };
-                    const asignaturaParaLocalStorage = mapaAsignaturasInverso[asignaturaSeleccionada] || asignaturaSeleccionada.toLowerCase();
-
-                    let hayDatosEspecificos = false;
-                    for (let i = 0; i < localStorage.length; i++) {
-                        const clave = localStorage.key(i);
-                        if (clave && clave.startsWith(`${asignaturaParaLocalStorage}_`)) {
-                            const valor = localStorage.getItem(clave);
-                            if (valor && parseInt(valor, 10) > 0) {
-                                hayDatosEspecificos = true;
-                                break;
-                            }
-                        }
-                    }
-                    setHayDatosAsignatura(hayDatosEspecificos);
+                    // Simplificado: asumir que no hay datos específicos
+                    setHayDatosAsignatura(false);
                 } else {
                     setHayDatosAsignatura(true);
                 }

@@ -18,23 +18,31 @@ const PremiumPage: React.FC = () => {
 
     // Cargar información del usuario
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            const userData = localStorage.getItem('currentUser') || localStorage.getItem('user');
-            if (userData) {
-                const user = JSON.parse(userData);
+        const loadUser = async () => {
+            try {
+                const response = await fetch('/api/auth/me');
+                if (!response.ok) {
+                    router.push('/');
+                    return;
+                }
+                const user = await response.json();
                 setUsuario(user);
 
                 // Verificar si tiene premium activo
-                const premiumInfo = localStorage.getItem(`premium_${user.nick}`);
-                if (premiumInfo) {
-                    const premium = JSON.parse(premiumInfo);
-                    if (new Date(premium.expiracion) > new Date()) {
+                const premiumResponse = await fetch('/api/premium/data');
+                if (premiumResponse.ok) {
+                    const premium = await premiumResponse.json();
+                    if (premium.activo && premium.fechaExpiracion && new Date(premium.fechaExpiracion) > new Date()) {
                         setIsPremium(true);
                     }
                 }
+            } catch (error) {
+                console.error('Error loading user:', error);
+                router.push('/');
             }
             setLoading(false);
-        }
+        };
+        loadUser();
     }, []);
 
     const beneficiosPremium = {
@@ -128,7 +136,17 @@ const PremiumPage: React.FC = () => {
                 beneficios: beneficiosPremium
             };
 
-            localStorage.setItem(`premium_${usuario.nick}`, JSON.stringify(premiumData));
+            // Guardar en la base de datos
+            await fetch('/api/premium/data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    fechaInicio: premiumData.fechaInicio,
+                    fechaExpiracion: premiumData.expiracion,
+                    activo: true
+                })
+            });
+
             setIsPremium(true);
 
             alert(`🎉 ¡Bienvenido a StoryUp Premium, ${usuario.nick}!\n\nTu experiencia de aprendizaje acaba de mejorar significativamente. ¡Disfruta de todos los beneficios Premium por un año completo!`);

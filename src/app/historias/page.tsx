@@ -19,13 +19,16 @@ export default function Historias() {
     const [topComentarios, setTopComentarios] = useState<Historia[]>([]);
     const { t } = useTranslation();
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            const guardadas = localStorage.getItem("historias");
-            const arr = guardadas ? JSON.parse(guardadas) : [];
-            setHistorias(arr.slice(0, 25));
-            setTopLikes([...arr].sort((a, b) => (b.likes || 0) - (a.likes || 0)).slice(0, 25));
-            setTopComentarios([...arr].sort((a, b) => (b.comentarios?.length || 0) - (a.comentarios?.length || 0)).slice(0, 25));
-        }
+        fetch('/api/historias')
+            .then(response => response.json())
+            .then(arr => {
+                setHistorias(arr);
+                setTopLikes([...arr].sort((a, b) => (b.likes || 0) - (a.likes || 0)).slice(0, 25));
+                setTopComentarios([...arr].sort((a, b) => (b.comentarios?.length || 0) - (a.comentarios?.length || 0)).slice(0, 25));
+            })
+            .catch(error => {
+                console.error('Error cargando historias:', error);
+            });
     }, []);
 
     return (

@@ -1,36 +1,26 @@
 
 "use client";
 // Obtener datos reales de docentes por temporada
-function getTablaDocentes(temporada: string) {
-    if (typeof window === "undefined") return [];
-    // Extraer número de temporada
-    const num = temporada.replace(/\D/g, "");
-    const key = `campeonato_docentes_t${num}`;
-    const tabla = JSON.parse(window.localStorage.getItem(key) || '{}');
-    const usersStr = window.localStorage.getItem("users");
-    if (!usersStr) return [];
-    const usersArr = JSON.parse(usersStr);
-    const docentes = usersArr.filter((u: any) => (u.tipo || "").toLowerCase() === "docente");
-    const resultado: { escudo: string; nombre: string; ganados: number; perdidos: number; preguntasAcertadas: number; preguntasFalladas: number; likes: number; }[] = [];
-    docentes.forEach((doc: any) => {
-        // Normalizar nick igual que en ChampionshipQuiz
-        const nickDocente = (doc.nick || "").toLowerCase().replace(/\s+/g, "");
-        const datos = tabla[nickDocente] || {};
-        // Solo docentes que hayan realizado al menos una competición (1+ acertada)
-        if ((datos.preguntasAcertadas ?? datos.acertadas ?? 0) >= 1) {
-            resultado.push({
-                escudo: doc.escudo || '👨‍🏫',
-                nombre: doc.nick,
-                ganados: datos.ganados ?? datos.ganado ?? 0,
-                perdidos: datos.perdidos ?? datos.perdido ?? 0,
-                preguntasAcertadas: datos.preguntasAcertadas ?? datos.acertadas ?? 0,
-                preguntasFalladas: datos.preguntasFalladas ?? datos.falladas ?? 0,
-                likes: datos.likes ?? 0,
-            });
-        }
-    });
-    // Ordenar y limitar a los 25 mejores
-    return resultado.sort((a, b) => b.likes - a.likes).slice(0, 25);
+async function getTablaDocentes(temporada: string) {
+    try {
+        const response = await fetch(`/api/championship/results?season=${temporada}&type=docentes`);
+        if (!response.ok) return [];
+        const data = await response.json();
+        const resultado: { escudo: string; nombre: string; ganados: number; perdidos: number; preguntasAcertadas: number; preguntasFalladas: number; likes: number; }[] = data.map((item: any) => ({
+            escudo: item.escudo || '👨‍🏫',
+            nombre: item.nick,
+            ganados: item.ganados ?? 0,
+            perdidos: item.perdidos ?? 0,
+            preguntasAcertadas: item.preguntasAcertadas ?? 0,
+            preguntasFalladas: item.preguntasFalladas ?? 0,
+            likes: item.likes ?? 0,
+        }));
+        // Ordenar y limitar a los 25 mejores
+        return resultado.sort((a, b) => b.likes - a.likes).slice(0, 25);
+    } catch (error) {
+        console.error('Error cargando docentes:', error);
+        return [];
+    }
 }
 import React from "react";
 import { renderNick } from "@/utils/renderNick";
@@ -67,16 +57,15 @@ export default function Competiciones() {
     React.useEffect(() => {
         if (typeof window === "undefined") return;
 
-        // Cargar usuario del localStorage
-        const userData = localStorage.getItem('currentUser');
-        if (userData) {
-            try {
-                const user = JSON.parse(userData);
+        // Cargar usuario actual
+        fetch('/api/auth/me')
+            .then(response => response.ok ? response.json() : null)
+            .then(user => {
                 setUsuario(user);
-            } catch (error) {
-                console.error('Error al cargar datos de usuario:', error);
-            }
-        }
+            })
+            .catch(error => {
+                console.error('Error cargando usuario:', error);
+            });
 
         // Función para calcular la temporada actual basada en el año escolar
         const getTemporadaActual = () => {
@@ -95,122 +84,80 @@ export default function Competiciones() {
             return `t${temporadaYear}`;
         };
 
-        // Detectar todas las temporadas disponibles en localStorage
-        let temporadas: string[] = Object.keys(window.localStorage)
-            .filter(k => k.startsWith("campeonato_individual_t") || k.startsWith("campeonato_centros_t") || k.startsWith("campeonato_docentes_t"))
-            .map(k => {
-                const match = k.match(/t(\d+)/);
-                return match ? `t${match[1]}` : null;
+        // Detectar todas las temporadas disponibles en la base de datos
+        fetch('/api/championship/seasons')
+            .then(response => response.ok ? response.json() : [])
+            .then((temporadas: string[]) => {
+                // Obtener la temporada actual
+                const temporadaActual = getTemporadaActual();
+
+                // Si no hay ninguna temporada guardada o la actual no existe, añadirla
+                if (!temporadas.includes(temporadaActual)) {
+                    temporadas.push(temporadaActual);
+                }
+
+                // Ordenar temporadas de más reciente a más antigua
+                temporadas.sort((a, b) => {
+                    const yearA = parseInt(a.replace('t', ''));
+                    const yearB = parseInt(b.replace('t', ''));
+                    return yearB - yearA;
+                });
+
+                setTemporadasDisponibles(temporadas);
+                setTemporadaSeleccionada(temporadaActual);
             })
-            .filter((t): t is string => t !== null)
-            .filter((t, i, arr) => arr.indexOf(t) === i); // remover duplicados
-
-        // Obtener la temporada actual
-        const temporadaActual = getTemporadaActual();
-
-        // Si no hay ninguna temporada guardada o la actual no existe, añadirla
-        if (!temporadas.includes(temporadaActual)) {
-            temporadas.push(temporadaActual);
-        }
-
-        // Ordenar temporadas de más reciente a más antigua
-        temporadas.sort((a, b) => {
-            const yearA = parseInt(a.replace('t', ''));
-            const yearB = parseInt(b.replace('t', ''));
-            return yearB - yearA;
-        });
-
-        setTemporadasDisponibles(temporadas);
-        setTemporadaSeleccionada(temporadaActual);
-
-        // Reseteo automático de temporada cada 1 de octubre
-        const now = new Date();
-        const isFirstOctober = now.getMonth() === 9 && now.getDate() === 1; // Octubre es mes 9 (0-indexed)
-        const lastResetYear = localStorage.getItem('lastSeasonResetYear');
-        if (isFirstOctober && lastResetYear !== String(now.getFullYear())) {
-            // Eliminar datos de la temporada anterior
-            const prevYear = now.getFullYear() - 1;
-            const prevKeyCentros = `campeonato_centros_t${prevYear}`;
-            const prevKeyIndividual = `campeonato_individual_t${prevYear}`;
-            const prevKeyDocentes = `campeonato_docentes_t${prevYear}`;
-            localStorage.removeItem(prevKeyCentros);
-            localStorage.removeItem(prevKeyIndividual);
-            localStorage.removeItem(prevKeyDocentes);
-            localStorage.setItem('lastSeasonResetYear', String(now.getFullYear()));
-            console.log(`Temporada ${prevYear} reseteada automáticamente el 1 de octubre.`);
-        }
+            .catch(error => {
+                console.error('Error cargando temporadas:', error);
+                const temporadaActual = getTemporadaActual();
+                setTemporadasDisponibles([temporadaActual]);
+                setTemporadaSeleccionada(temporadaActual);
+            });
     }, []);
 
     // Función para cargar datos de centros por temporada
-    function getTablaCentros(temporada: string) {
-        if (typeof window === "undefined") return [];
-        const key = `campeonato_centros_${temporada}`;
-        const tabla = JSON.parse(window.localStorage.getItem(key) || '{}');
-        const resultado: Centro[] = [];
-
-        // Si hay datos guardados, cargarlos
-        Object.entries(tabla).forEach(([centro, datos]: [string, any]) => {
-            // Solo centros que hayan realizado al menos una competición (1+ acertada)
-            if ((datos.preguntasAcertadas ?? 0) >= 1) {
-                resultado.push({
-                    escudo: datos.escudo || '🏫',
-                    nombre: centro,
-                    ganados: datos.ganados ?? 0,
-                    perdidos: datos.perdidos ?? 0,
-                    preguntasAcertadas: datos.preguntasAcertadas ?? 0,
-                    preguntasFalladas: datos.preguntasFalladas ?? 0,
-                    likes: datos.likes ?? 0,
-                });
-            }
-        });
-
-        // Ordenar y completar hasta 25
-        resultado.sort((a, b) => b.likes - a.likes);
-        // Solo mostrar los que cumplen el criterio, sin rellenar con centros ficticios
-        return resultado.slice(0, 25);
+    async function getTablaCentros(temporada: string) {
+        try {
+            const response = await fetch(`/api/championship/results?season=${temporada}&type=centros`);
+            if (!response.ok) return [];
+            const data = await response.json();
+            const resultado: Centro[] = data.map((item: any) => ({
+                escudo: item.escudo || '🏫',
+                nombre: item.centro,
+                ganados: item.ganados ?? 0,
+                perdidos: item.perdidos ?? 0,
+                preguntasAcertadas: item.preguntasAcertadas ?? 0,
+                preguntasFalladas: item.preguntasFalladas ?? 0,
+                likes: item.likes ?? 0,
+            }));
+            // Ordenar y limitar a los 25 mejores
+            return resultado.sort((a, b) => b.likes - a.likes).slice(0, 25);
+        } catch (error) {
+            console.error('Error cargando centros:', error);
+            return [];
+        }
     }
 
     // Función para cargar datos de alumnos por temporada
-    function getTablaAlumnos(temporada: string) {
-        if (typeof window === "undefined") return [];
-        const key = `campeonato_individual_${temporada}`;
-        const tabla = JSON.parse(window.localStorage.getItem(key) || '{}');
-        const usersStr = window.localStorage.getItem("users");
-        if (!usersStr) return Array.from({ length: 25 }, () => ({
-            escudo: '👤',
-            nombre: 'Aún no hay alumno',
-            ganados: 0,
-            perdidos: 0,
-            preguntasAcertadas: 0,
-            preguntasFalladas: 0,
-            likes: 0
-        }));
-
-        const usersArr = JSON.parse(usersStr);
-        const alumnos = usersArr.filter((u: any) => (u.tipo || "").toLowerCase() !== "docente");
-        const resultado: Alumno[] = [];
-
-        alumnos.forEach((alumno: any) => {
-            const nickAlumno = (alumno.nick || "").toLowerCase().replace(/\s+/g, "");
-            const datos = tabla[nickAlumno] || {};
-            // Solo alumnos que hayan realizado al menos una competición (1+ acertada)
-            if ((datos.preguntasAcertadas ?? 0) >= 1) {
-                resultado.push({
-                    escudo: alumno.escudo || '👤',
-                    nombre: alumno.nick,
-                    ganados: datos.ganados ?? 0,
-                    perdidos: datos.perdidos ?? 0,
-                    preguntasAcertadas: datos.preguntasAcertadas ?? 0,
-                    preguntasFalladas: datos.preguntasFalladas ?? 0,
-                    likes: datos.likes ?? 0,
-                });
-            }
-        });
-
-        // Ordenar y completar hasta 25
-        resultado.sort((a, b) => b.likes - a.likes);
-        // Solo mostrar los que cumplen el criterio, sin rellenar con alumnos ficticios
-        return resultado.slice(0, 25);
+    async function getTablaAlumnos(temporada: string) {
+        try {
+            const response = await fetch(`/api/championship/results?season=${temporada}&type=individual`);
+            if (!response.ok) return [];
+            const data = await response.json();
+            const resultado: Alumno[] = data.map((item: any) => ({
+                escudo: item.escudo || '👤',
+                nombre: item.nick,
+                ganados: item.ganados ?? 0,
+                perdidos: item.perdidos ?? 0,
+                preguntasAcertadas: item.preguntasAcertadas ?? 0,
+                preguntasFalladas: item.preguntasFalladas ?? 0,
+                likes: item.likes ?? 0,
+            }));
+            // Ordenar y limitar a los 25 mejores
+            return resultado.sort((a, b) => b.likes - a.likes).slice(0, 25);
+        } catch (error) {
+            console.error('Error cargando alumnos:', error);
+            return [];
+        }
     }
 
     // Solo cargar datos al cambiar la temporada
@@ -218,19 +165,22 @@ export default function Competiciones() {
         if (!temporadaSeleccionada) return;
         if (typeof window === "undefined") return;
 
-        // Cargar datos de la temporada seleccionada
-        const centros = getTablaCentros(temporadaSeleccionada);
-        const alumnos = getTablaAlumnos(temporadaSeleccionada);
-        const docentes = getTablaDocentes(temporadaSeleccionada);
+        const loadData = async () => {
+            const centros = await getTablaCentros(temporadaSeleccionada);
+            const alumnos = await getTablaAlumnos(temporadaSeleccionada);
+            const docentes = await getTablaDocentes(temporadaSeleccionada);
 
-        setMostrarCentros(centros);
-        setMostrarAlumnos(alumnos);
-        setMostrarDocentes(docentes);
-        setLoading(false);
+            setMostrarCentros(centros);
+            setMostrarAlumnos(alumnos);
+            setMostrarDocentes(docentes);
+            setLoading(false);
+        };
+
+        loadData();
     }, [temporadaSeleccionada]);
 
     // Handler para resetear datos solo al hacer clic en el nick (función de administrador)
-    function handleResetDatos() {
+    async function handleResetDatos() {
         if (typeof window === "undefined") return;
 
         const confirmReset = window.confirm(
@@ -244,24 +194,29 @@ export default function Competiciones() {
 
         if (!confirmReset) return;
 
-        const keyCentros = `campeonato_centros_${temporadaSeleccionada}`;
-        const keyIndividual = `campeonato_individual_${temporadaSeleccionada}`;
-        const keyDocentes = `campeonato_docentes_${temporadaSeleccionada.replace('t', 't')}`;
+        try {
+            const response = await fetch(`/api/championship/reset?season=${temporadaSeleccionada}`, {
+                method: 'DELETE'
+            });
 
-        window.localStorage.removeItem(keyCentros);
-        window.localStorage.removeItem(keyIndividual);
-        window.localStorage.removeItem(keyDocentes);
+            if (!response.ok) {
+                throw new Error('Error reseteando datos');
+            }
 
-        // Recargar datos (ahora serán tablas vacías)
-        const centros = getTablaCentros(temporadaSeleccionada);
-        const alumnos = getTablaAlumnos(temporadaSeleccionada);
-        const docentes = getTablaDocentes(temporadaSeleccionada);
+            // Recargar datos (ahora serán tablas vacías)
+            const centros = await getTablaCentros(temporadaSeleccionada);
+            const alumnos = await getTablaAlumnos(temporadaSeleccionada);
+            const docentes = await getTablaDocentes(temporadaSeleccionada);
 
-        setMostrarCentros(centros);
-        setMostrarAlumnos(alumnos);
-        setMostrarDocentes(docentes);
+            setMostrarCentros(centros);
+            setMostrarAlumnos(alumnos);
+            setMostrarDocentes(docentes);
 
-        alert(`Datos de la temporada ${temporadaSeleccionada.replace('t', '')} reseteados correctamente.`);
+            alert(`Datos de la temporada ${temporadaSeleccionada.replace('t', '')} reseteados correctamente.`);
+        } catch (error) {
+            console.error('Error reseteando:', error);
+            alert('Error al resetear los datos.');
+        }
     }
 
     // Función para obtener información de la temporada actual

@@ -12,21 +12,15 @@ export default function Noticias() {
 
     const [noticias, setNoticias] = React.useState<Noticia[]>([]);
     React.useEffect(() => {
-        if (typeof window !== "undefined") {
-            const guardadas = localStorage.getItem("noticias");
-            if (guardadas) {
-                try {
-                    const arr = JSON.parse(guardadas);
-                    console.log("Noticias cargadas desde localStorage:", arr);
-                    // Mostrar las 25 más recientes arriba
-                    setNoticias(arr.slice(0, 25));
-                } catch (error) {
-                    console.error("Error al cargar noticias desde localStorage:", error);
-                }
-            } else {
-                console.log("No se encontraron noticias en localStorage.");
-            }
-        }
+        fetch('/api/noticias')
+            .then(response => response.json())
+            .then(data => {
+                console.log("Noticias cargadas desde API:", data);
+                setNoticias(data);
+            })
+            .catch(error => {
+                console.error("Error al cargar noticias desde API:", error);
+            });
     }, []);
     const mostrarNoticias = noticias.length > 0
         ? noticias.map((noticia, idx) => {

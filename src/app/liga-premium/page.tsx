@@ -20,91 +20,48 @@ const LigaPremiumPage: React.FC = () => {
     const [usuariosPremium, setUsuariosPremium] = useState<UsuarioPremium[]>([]);
 
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            const userData = localStorage.getItem('currentUser') || localStorage.getItem('user');
-            if (userData) {
-                const user = JSON.parse(userData);
-                setUsuarioActual(user);
-
-                // Verificar si es premium
-                const premiumInfo = localStorage.getItem(`premium_${user.nick}`);
-                if (premiumInfo) {
-                    const premium = JSON.parse(premiumInfo);
-                    if (new Date(premium.expiracion) > new Date()) {
-                        setIsPremium(true);
-                        cargarLigaPremium();
-                    } else {
-                        alert('Tu suscripción Premium ha expirado. Renueva para acceder a la Liga Premium.');
-                        router.push('/premium-nuevo');
-                    }
+        // Obtener usuario actual
+        fetch('/api/auth/me')
+            .then(response => response.json())
+            .then(data => {
+                if (data.user) {
+                    setUsuarioActual(data.user);
+                    // Verificar si es premium
+                    fetch('/api/premium/data?nick=' + data.user.nick)
+                        .then(response => response.json())
+                        .then(premiumData => {
+                            if (premiumData.activo && new Date(premiumData.fechaExpiracion) > new Date()) {
+                                setIsPremium(true);
+                                cargarLigaPremium();
+                            } else {
+                                alert('Tu suscripción Premium ha expirado. Renueva para acceder a la Liga Premium.');
+                                router.push('/premium-nuevo');
+                            }
+                        })
+                        .catch(() => {
+                            alert('Esta función es exclusiva para usuarios Premium.');
+                            router.push('/premium-nuevo');
+                        });
                 } else {
-                    alert('Esta función es exclusiva para usuarios Premium.');
-                    router.push('/premium-nuevo');
+                    router.push('/');
                 }
-            } else {
+                setLoading(false);
+            })
+            .catch(() => {
                 router.push('/');
-            }
-            setLoading(false);
-        }
+                setLoading(false);
+            });
     }, []);
 
     const cargarLigaPremium = () => {
-        if (typeof window === "undefined") return;
-
-        const usersStr = localStorage.getItem("users");
-        if (!usersStr) return;
-
-        const users = JSON.parse(usersStr);
-        const premiumUsers: UsuarioPremium[] = [];
-
-        users.forEach((user: any) => {
-            const premiumInfo = localStorage.getItem(`premium_${user.nick}`);
-            if (premiumInfo) {
-                const premium = JSON.parse(premiumInfo);
-                if (new Date(premium.expiracion) > new Date()) {
-                    // Calcular puntos basados en actividades premium
-                    const puntos = calcularPuntosUsuario(user);
-                    premiumUsers.push({
-                        nick: user.nick,
-                        avatar: user.avatar,
-                        puntos: puntos,
-                        historiasCreadas: user.historiasCreadas || 0,
-                        preguntasAcertadas: user.preguntasAcertadas || 0,
-                        amigos: user.amigos?.length || 0,
-                        medallas: user.medallas?.length || 0
-                    });
-                }
-            }
-        });
-
-        // Ordenar por puntos descendente
-        premiumUsers.sort((a, b) => b.puntos - a.puntos);
-        setUsuariosPremium(premiumUsers);
-    };
-
-    const calcularPuntosUsuario = (user: any): number => {
-        let puntos = 0;
-
-        // Puntos por historias creadas (10 puntos cada una)
-        puntos += (user.historiasCreadas || 0) * 10;
-
-        // Puntos por preguntas acertadas (5 puntos cada una)
-        puntos += (user.preguntasAcertadas || 0) * 5;
-
-        // Puntos por amigos (20 puntos cada amigo)
-        puntos += (user.amigos?.length || 0) * 20;
-
-        // Puntos por medallas (50 puntos cada medalla)
-        puntos += (user.medallas?.length || 0) * 50;
-
-        // Puntos por participación en competiciones premium
-        const competicionesPremium = localStorage.getItem(`competiciones_premium_${user.nick}`);
-        if (competicionesPremium) {
-            const comps = JSON.parse(competicionesPremium);
-            puntos += comps.puntuacionTotal || 0; // Puntuación total de torneos
-        }
-
-        return puntos;
+        fetch('/api/liga-premium')
+            .then(response => response.json())
+            .then(data => {
+                setUsuariosPremium(data);
+            })
+            .catch(error => {
+                console.error('Error cargando liga premium:', error);
+            });
     };
 
     if (loading) {

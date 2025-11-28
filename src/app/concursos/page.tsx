@@ -9,10 +9,17 @@ export default function Concursos() {
     const { t } = useTranslation();
 
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            const concursosStr = localStorage.getItem("concursos");
-            setConcursos(concursosStr ? JSON.parse(concursosStr) : []);
-        }
+        const fetchConcursos = async () => {
+            try {
+                const response = await fetch('/api/concursos');
+                const data = await response.json();
+                setConcursos(data.concursos || []);
+            } catch (error) {
+                console.error('Error cargando concursos:', error);
+                setConcursos([]);
+            }
+        };
+        fetchConcursos();
     }, []);
 
     const hoy = new Date();
@@ -88,34 +95,28 @@ export default function Concursos() {
                 <h2 className="text-xl font-bold text-center mb-4">{t('ultimosGanadores')}</h2>
                 <ul className="divide-y">
                     {(() => {
-                        if (typeof window !== "undefined") {
-                            const concursosStr = localStorage.getItem("concursos");
-                            const concursosArr = concursosStr ? JSON.parse(concursosStr) : [];
-                            // Filtrar los que tengan ganador y mostrar los 25 más recientes
-                            const ganadores = concursosArr.filter((c: any) => c.ganador && c.ganador !== "").slice(0, 25);
-                            if (ganadores.length === 0) {
-                                return <li className="py-2 text-gray-500">{t('aunNoHayGanadores')}</li>;
-                            }
-                            return ganadores.map((c: any, idx: number) => (
-                                <li key={idx} className="py-2">
-                                    <span className="font-bold">{idx + 1}º </span>
-                                    <span className="text-blue-700 font-semibold">{c.titulo}</span>
-                                    {c.autor && (
-                                        <span className="ml-2 text-gray-700">{renderNick(c.autor)}</span>
-                                    )}
-                                    {c.ganador && (
-                                        <span className="ml-2">
-                                            {renderNick(c.ganador, "text-green-700 underline")}
-                                        </span>
-                                    )}
-                                    {c.fechaFinal && (
-                                        <span className="ml-2 text-gray-500 text-sm">Finalizado: {c.fechaFinal}</span>
-                                    )}
-                                </li>
-                            ));
-                        } else {
+                        // Filtrar los que tengan ganador y mostrar los 25 más recientes
+                        const ganadores = concursos.filter((c: any) => c.ganador && c.ganador !== "").slice(0, 25);
+                        if (ganadores.length === 0) {
                             return <li className="py-2 text-gray-500">{t('aunNoHayGanadores')}</li>;
                         }
+                        return ganadores.map((c: any, idx: number) => (
+                            <li key={idx} className="py-2">
+                                <span className="font-bold">{idx + 1}º </span>
+                                <span className="text-blue-700 font-semibold">{c.titulo}</span>
+                                {c.autor && (
+                                    <span className="ml-2 text-gray-700">{renderNick(c.autor)}</span>
+                                )}
+                                {c.ganador && (
+                                    <span className="ml-2">
+                                        {renderNick(c.ganador, "text-green-700 underline")}
+                                    </span>
+                                )}
+                                {c.fechaFinal && (
+                                    <span className="ml-2 text-gray-500 text-sm">Finalizado: {c.fechaFinal}</span>
+                                )}
+                            </li>
+                        ));
                     })()}
                 </ul>
             </div>

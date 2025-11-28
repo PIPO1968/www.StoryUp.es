@@ -40,101 +40,56 @@ export default function CreaHistoria() {
         }
     };
 
-    // Guardar historia (solo ejemplo, falta mostrar y persistir)
-    const handleEnviar = () => {
-        // Obtener usuario actual
-        let usuario = "";
-        let userObj = null;
-        if (typeof window !== "undefined") {
-            // Buscar primero en usuarioActual
-            const actual = localStorage.getItem("usuarioActual");
-            if (actual) {
-                try {
-                    const obj = JSON.parse(actual);
-                    usuario = obj.nick || "";
-                } catch {
-                    usuario = "";
-                }
+    // Guardar historia
+    const handleEnviar = async () => {
+        try {
+            // Obtener usuario actual
+            const response = await fetch('/api/auth/me');
+            const data = await response.json();
+            if (!data.user && !anonimo) {
+                alert("No se puede enviar la historia: no se ha detectado usuario. Inicia sesión como docente o alumno.");
+                return;
             }
-            // Si no hay nick, buscar en 'user'
-            if (!usuario) {
-                const userStr = localStorage.getItem("user");
-                if (userStr) {
-                    userObj = JSON.parse(userStr);
-                    usuario = userObj.nick || "";
-                }
+            const usuario = data.user ? data.user.nick : null;
+
+            // Obtener palabras prohibidas
+            const palabrasResponse = await fetch('/api/palabras-prohibidas');
+            const palabrasData = await palabrasResponse.json();
+            const palabras = palabrasData.palabras || [];
+
+            // Comprobar palabras prohibidas
+            const contenidoLower = contenido.toLowerCase();
+            const palabrasDetectadas = palabras.filter((p: string) =>
+                contenidoLower.includes(p) || contenidoLower.includes(p + "a") || contenidoLower.includes(p + "o")
+            );
+            if (palabrasDetectadas.length > 0) {
+                setPalabrasDetectadas(palabrasDetectadas);
+                setShowProhibitedPopup(true);
+                setTimeout(() => setShowProhibitedPopup(false), 30000);
+                // Nota: Penalización removida, manejar en backend si necesario
             }
+
+            // Crear historia
+            await fetch('/api/historias', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    titulo,
+                    contenido,
+                    autorNick: anonimo ? "Anónimo" : usuario,
+                    imagen,
+                    concurso: esConcurso ? numConcurso : null
+                })
+            });
+
+            alert("Historia enviada!");
+            setTitulo("");
+            setContenido("");
+            setImagen(null);
+        } catch (error) {
+            console.error('Error creando historia:', error);
+            alert("Error enviando historia");
         }
-        if (!anonimo && !usuario) {
-            alert("No se puede enviar la historia: no se ha detectado usuario. Inicia sesión como docente o alumno.");
-            return;
-        }
-        // Comprobar palabras prohibidas
-        let contieneProhibida = false;
-        let palabrasDetectadas: string[] = [];
-        if (typeof window !== "undefined") {
-            const stored = localStorage.getItem("prohibitedWords");
-            if (stored) {
-                const palabras = JSON.parse(stored);
-                const contenidoLower = contenido.toLowerCase();
-                palabrasDetectadas = palabras.filter((p: string) =>
-                    contenidoLower.includes(p) || contenidoLower.includes(p + "a") || contenidoLower.includes(p + "o")
-                );
-                contieneProhibida = palabrasDetectadas.length > 0;
-                if (contieneProhibida && usuario) {
-                    setShowProhibitedPopup(true);
-                    setTimeout(() => setShowProhibitedPopup(false), 30000);
-                    // Penalizar solo una vez
-                    const usersStr = localStorage.getItem("users");
-                    if (usersStr) {
-                        let usersArr = JSON.parse(usersStr);
-                        usersArr = usersArr.map((u: any) =>
-                            u.nick === usuario ? { ...u, likes: (u.likes || 0) - 10 } : u
-                        );
-                        localStorage.setItem("users", JSON.stringify(usersArr));
-                    }
-                }
-            }
-        }
-        // Crear historia
-        const nuevaHistoria = {
-            id: Date.now(),
-            titulo,
-            contenido,
-            autor: anonimo ? "Anónimo" : usuario,
-            fecha: new Date().toLocaleString(),
-            imagen,
-            likes: 0,
-            comentarios: [],
-            concurso: esConcurso ? numConcurso : ""
-        };
-        // Guardar en localStorage
-        let historias = [];
-        if (typeof window !== "undefined") {
-            const guardadas = localStorage.getItem("historias");
-            historias = guardadas ? JSON.parse(guardadas) : [];
-            historias.unshift(nuevaHistoria); // Añadir al principio
-            localStorage.setItem("historias", JSON.stringify(historias));
-            // Añadir la historia al array user.historias y actualizar en localStorage
-            if (userObj && usuario) {
-                const userHistorias = Array.isArray(userObj.historias) ? userObj.historias : [];
-                userObj.historias = [nuevaHistoria.id, ...userHistorias];
-                localStorage.setItem("user", JSON.stringify(userObj));
-                // Actualizar también en el array de usuarios
-                const usersStr = localStorage.getItem("users");
-                if (usersStr) {
-                    let usersArr: any[] = JSON.parse(usersStr);
-                    usersArr = usersArr.map((u: any) =>
-                        u.nick === usuario ? { ...u, historias: [nuevaHistoria.id, ...(Array.isArray(u.historias) ? u.historias : [])] } : u
-                    );
-                    localStorage.setItem("users", JSON.stringify(usersArr));
-                }
-            }
-        }
-        alert("Historia enviada!");
-        setTitulo("");
-        setContenido("");
-        setImagen(null);
     };
 
     return (

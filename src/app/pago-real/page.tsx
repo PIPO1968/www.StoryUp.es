@@ -31,10 +31,22 @@ export default function PagoRealPage() {
             id: Date.now() + Math.random().toString(36).substr(2, 9) // ID único
         };
 
-        // Guardar en lista de solicitudes pendientes
-        const solicitudesPendientes = JSON.parse(localStorage.getItem('solicitudes_premium') || '[]');
-        solicitudesPendientes.push(solicitudPago);
-        localStorage.setItem('solicitudes_premium', JSON.stringify(solicitudesPendientes));
+        // Guardar solicitud en la base de datos
+        try {
+            await fetch('/api/premium/solicitudes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nick: nick.trim(),
+                    email: email.trim(),
+                    estado: "pendiente",
+                    tipo: "anual",
+                    precio: 12
+                })
+            });
+        } catch (error) {
+            console.error('Error guardando solicitud:', error);
+        }
 
         // Simular envío de email al administrador (en producción usarías una API real)
         console.log("📧 Email enviado al administrador:", {

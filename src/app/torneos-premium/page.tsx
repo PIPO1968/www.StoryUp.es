@@ -27,10 +27,14 @@ const TorneosPremiumPage: React.FC = () => {
     const [cursoUsuario, setCursoUsuario] = useState<number>(1);
 
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            const userData = localStorage.getItem('currentUser') || localStorage.getItem('user');
-            if (userData) {
-                const user = JSON.parse(userData);
+        const loadUser = async () => {
+            try {
+                const response = await fetch('/api/auth/me');
+                if (!response.ok) {
+                    router.push('/');
+                    return;
+                }
+                const user = await response.json();
                 setUsuarioActual(user);
 
                 // Determinar curso del usuario
@@ -61,12 +65,12 @@ const TorneosPremiumPage: React.FC = () => {
                 setCursoUsuario(cursoDetectado);
 
                 // Verificar si es premium
-                const premiumInfo = localStorage.getItem(`premium_${user.nick}`);
-                if (premiumInfo) {
-                    const premium = JSON.parse(premiumInfo);
-                    if (new Date(premium.expiracion) > new Date()) {
+                const premiumResponse = await fetch('/api/premium/data');
+                if (premiumResponse.ok) {
+                    const premium = await premiumResponse.json();
+                    if (premium.activo && premium.fechaExpiracion && new Date(premium.fechaExpiracion) > new Date()) {
                         setIsPremium(true);
-                        cargarTorneos();
+                        await cargarTorneos();
                     } else {
                         alert('Tu suscripción Premium ha expirado. Renueva para acceder a los Torneos Premium.');
                         router.push('/premium-nuevo');
@@ -75,11 +79,13 @@ const TorneosPremiumPage: React.FC = () => {
                     alert('Los Torneos Premium son exclusivos para usuarios Premium.');
                     router.push('/premium-nuevo');
                 }
-            } else {
+            } catch (error) {
+                console.error('Error loading user:', error);
                 router.push('/');
             }
             setLoading(false);
-        }
+        };
+        loadUser();
     }, []);
 
     const esTorneoDisponibleParaUsuario = (torneoId: string) => {
@@ -92,12 +98,22 @@ const TorneosPremiumPage: React.FC = () => {
         return false;
     };
 
-    const cargarTorneos = () => {
-        // FORZAR recreación de torneos nuevos - limpiar datos antiguos
-        localStorage.removeItem('torneos_premium');
-        localStorage.removeItem('torneos_premium_last_reset');
+    const cargarTorneos = async () => {
+        try {
+            // Cargar torneos desde la base de datos
+            const response = await fetch('/api/premium/torneos');
+            if (response.ok) {
+                const torneoData = await response.json();
+                if (torneoData.torneos) {
+                    setTorneos(torneoData.torneos);
+                    return;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading torneos:', error);
+        }
 
-        // Crear torneos mensuales por defecto
+        // Si no hay datos, crear torneos por defecto
         const currentMonth = new Date().getMonth();
         const currentYear = new Date().getFullYear();
         const torneosDefault: Torneo[] = [
@@ -175,11 +191,19 @@ const TorneosPremiumPage: React.FC = () => {
             }
         ];
         setTorneos(torneosDefault);
-        localStorage.setItem('torneos_premium', JSON.stringify(torneosDefault));
-        localStorage.setItem('torneos_premium_last_reset', new Date().toISOString());
+
+        // Guardar en la base de datos
+        await fetch('/api/premium/torneos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                torneos: torneosDefault,
+                lastReset: new Date().toISOString()
+            })
+        });
     };
 
-    const registrarseTorneo = (torneoId: string) => {
+    const registrarseTorneo = async (torneoId: string) => {
         if (!usuarioActual) return;
 
         const torneosActualizados = torneos.map(torneo => {
@@ -201,17 +225,32 @@ const TorneosPremiumPage: React.FC = () => {
         });
 
         setTorneos(torneosActualizados);
-        localStorage.setItem('torneos_premium', JSON.stringify(torneosActualizados));
+
+        // Guardar en la base de datos
+        await fetch('/api/premium/torneos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                torneos: torneosActualizados
+            })
+        });
+
         alert('¡Te has registrado exitosamente en el torneo!');
     };
 
-    const iniciarTorneo = (torneo: Torneo) => {
-        // Guardar información del torneo activo en localStorage
-        localStorage.setItem('torneo_activo_premium', JSON.stringify({
-            torneoId: torneo.id,
-            curso: torneo.id.split('-')[2], // Extraer el curso del ID (1primaria, 2primaria, etc.)
-            startTime: new Date().toISOString()
-        }));
+    const iniciarTorneo = async (torneo: Torneo) => {
+        // Guardar información del torneo activo en la base de datos
+        await fetch('/api/premium/torneos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                torneoActivo: {
+                    torneoId: torneo.id,
+                    curso: torneo.id.split('-')[2], // Extraer el curso del ID (1primaria, 2primaria, etc.)
+                    startTime: new Date().toISOString()
+                }
+            })
+        });
 
         // Redirigir al modo torneo en Aprende con Pipo
         router.push('/aprende-con-pipo?modo=torneo');
@@ -345,20 +384,41 @@ const TorneosPremiumPage: React.FC = () => {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                         <div className="bg-white/20 rounded p-4">
                             <div className="text-2xl font-bold text-white">
-                                {JSON.parse(localStorage.getItem(`competiciones_premium_${usuarioActual.nick}`) || '{"victorias": 0}').victorias}
+                                {(() => {
+                                    const [stats, setStats] = useState({ victorias: 0, participaciones: 0, puntuacionTotal: 0 });
+                                    useEffect(() => {
+                                        fetch('/api/premium/competiciones')
+                                            .then(res => res.ok ? res.json() : { victorias: 0, participaciones: 0, puntuacionTotal: 0 })
+                                            .then(setStats);
+                                    }, []);
+                                    return stats.victorias;
+                                })()}
                             </div>
                             <div className="text-purple-100">Victorias</div>
                         </div>
                         <div className="bg-white/20 rounded p-4">
                             <div className="text-2xl font-bold text-white">
-                                {JSON.parse(localStorage.getItem(`competiciones_premium_${usuarioActual.nick}`) || '{"participaciones": 0}').participaciones}
+                                {(() => {
+                                    const [stats, setStats] = useState({ victorias: 0, participaciones: 0, puntuacionTotal: 0 });
+                                    useEffect(() => {
+                                        fetch('/api/premium/competiciones')
+                                            .then(res => res.ok ? res.json() : { victorias: 0, participaciones: 0, puntuacionTotal: 0 })
+                                            .then(setStats);
+                                    }, []);
+                                    return stats.participaciones;
+                                })()}
                             </div>
                             <div className="text-purple-100">Participaciones</div>
                         </div>
                         <div className="bg-white/20 rounded p-4">
                             <div className="text-2xl font-bold text-white">
                                 {(() => {
-                                    const stats = JSON.parse(localStorage.getItem(`competiciones_premium_${usuarioActual.nick}`) || '{"victorias": 0, "participaciones": 0}');
+                                    const [stats, setStats] = useState({ victorias: 0, participaciones: 0, puntuacionTotal: 0 });
+                                    useEffect(() => {
+                                        fetch('/api/premium/competiciones')
+                                            .then(res => res.ok ? res.json() : { victorias: 0, participaciones: 0, puntuacionTotal: 0 })
+                                            .then(setStats);
+                                    }, []);
                                     return stats.participaciones > 0 ? Math.round((stats.victorias / stats.participaciones) * 100) : 0;
                                 })()}%
                             </div>
@@ -366,7 +426,15 @@ const TorneosPremiumPage: React.FC = () => {
                         </div>
                         <div className="bg-white/20 rounded p-4">
                             <div className="text-2xl font-bold text-white">
-                                {JSON.parse(localStorage.getItem(`competiciones_premium_${usuarioActual.nick}`) || '{"puntuacionTotal": 0}').puntuacionTotal}
+                                {(() => {
+                                    const [stats, setStats] = useState({ victorias: 0, participaciones: 0, puntuacionTotal: 0 });
+                                    useEffect(() => {
+                                        fetch('/api/premium/competiciones')
+                                            .then(res => res.ok ? res.json() : { victorias: 0, participaciones: 0, puntuacionTotal: 0 })
+                                            .then(setStats);
+                                    }, []);
+                                    return stats.puntuacionTotal;
+                                })()}
                             </div>
                             <div className="text-purple-100">Puntuación Total</div>
                         </div>

@@ -9,11 +9,16 @@ export default function DetalleConcurso() {
     const numero = params?.numero;
 
     useEffect(() => {
-        if (typeof window !== "undefined" && numero) {
-            const concursosStr = localStorage.getItem("concursos");
-            const concursosArr = concursosStr ? JSON.parse(concursosStr) : [];
-            const encontrado = concursosArr.find((c: any) => String(c.numero) === String(numero));
-            setConcurso(encontrado || null);
+        if (numero) {
+            fetch('/api/concursos')
+                .then(response => response.json())
+                .then(concursos => {
+                    const encontrado = concursos.find((c: any) => String(c.numero) === String(numero));
+                    setConcurso(encontrado || null);
+                })
+                .catch(error => {
+                    console.error('Error cargando concursos:', error);
+                });
         }
     }, [numero]);
 
