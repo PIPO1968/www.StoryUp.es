@@ -5,16 +5,17 @@ const prisma = new PrismaClient();
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const id = parseInt(params.id);
-        if (isNaN(id)) {
+        const { id } = await params;
+        const historiaId = parseInt(id);
+        if (isNaN(historiaId)) {
             return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
         }
 
         const historia = await prisma.historia.findUnique({
-            where: { id },
+            where: { id: historiaId },
             include: {
                 autor: true
             }
