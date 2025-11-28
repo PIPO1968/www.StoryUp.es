@@ -4,10 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "prisma migrate deploy && next build",
+    "build": "prisma migrate deploy && node seed-database.js && next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "seed": "node seed-database.js"
   },
   "dependencies": {
     "@prisma/client": "^5.0.0",
