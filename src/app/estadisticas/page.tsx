@@ -725,6 +725,6 @@ export default function Estadisticas() {
                     })()}</li>
                 </ul>
             </div>
-        </>
+        </div>
     );
 }
