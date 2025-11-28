@@ -59,78 +59,88 @@ async function seedDatabase() {
             console.log(`✅ ${totalPreguntas} preguntas insertadas`);
         }
 
-        // 3. Crear algunos usuarios de prueba adicionales
+        // 3. Crear algunos usuarios de prueba adicionales (solo en desarrollo)
         console.log('👥 Creando usuarios de prueba...');
-        const testUsers = [
-            {
-                nick: 'TestDocente',
-                nombre: 'Docente de Prueba',
-                email: 'docente@test.com',
-                centro: 'Centro Educativo Test',
-                curso: '6º primaria',
-                tipo: 'docente',
-                password: '$2b$10$hashedpassword', // Contraseña hasheada
-                premium: false,
-                likes: 15,
-                respuestasAcertadas: 120,
-                competicionesSuperadas: 8,
-                concursosGanados: 2
-            },
-            {
-                nick: 'TestEstudiante',
-                nombre: 'Estudiante de Prueba',
-                email: 'estudiante@test.com',
-                centro: 'Centro Educativo Test',
-                curso: '3º primaria',
-                tipo: 'estudiante',
-                password: '$2b$10$hashedpassword',
-                premium: false,
-                likes: 8,
-                respuestasAcertadas: 45,
-                competicionesSuperadas: 3,
-                concursosGanados: 0
-            }
-        ];
+        const isDevelopment = process.env.NODE_ENV !== 'production';
+        if (isDevelopment) {
+            const testUsers = [
+                {
+                    nick: 'TestDocente',
+                    nombre: 'Docente de Prueba',
+                    email: 'docente@test.com',
+                    centro: 'Centro Educativo Test',
+                    curso: '6º primaria',
+                    tipo: 'docente',
+                    password: '$2b$10$hashedpassword', // Contraseña hasheada
+                    premium: false,
+                    likes: 15,
+                    respuestasAcertadas: 120,
+                    competicionesSuperadas: 8,
+                    concursosGanados: 2
+                },
+                {
+                    nick: 'TestEstudiante',
+                    nombre: 'Estudiante de Prueba',
+                    email: 'estudiante@test.com',
+                    centro: 'Centro Educativo Test',
+                    curso: '3º primaria',
+                    tipo: 'estudiante',
+                    password: '$2b$10$hashedpassword',
+                    premium: false,
+                    likes: 8,
+                    respuestasAcertadas: 45,
+                    competicionesSuperadas: 3,
+                    concursosGanados: 0
+                }
+            ];
 
-        for (const user of testUsers) {
-            await prisma.user.upsert({
-                where: { nick: user.nick },
-                update: user,
-                create: user
-            });
+            for (const user of testUsers) {
+                await prisma.user.upsert({
+                    where: { nick: user.nick },
+                    update: user,
+                    create: user
+                });
+            }
+            console.log(`✅ ${testUsers.length} usuarios de prueba creados`);
+        } else {
+            console.log('⏭️  Saltando creación de usuarios de prueba en producción');
         }
-        console.log(`✅ ${testUsers.length} usuarios de prueba creados`);
 
         // 4. Crear algunas historias de prueba
         console.log('📖 Creando historias de prueba...');
 
-        // Obtener IDs de usuarios creados
+        // Obtener IDs de usuarios existentes
         const pipoUser = await prisma.user.findUnique({ where: { nick: 'PIPO68' } });
         const docenteUser = await prisma.user.findUnique({ where: { nick: 'TestDocente' } });
 
-        if (!pipoUser || !docenteUser) {
-            throw new Error('Usuarios de prueba no encontrados');
-        }
+        const historias = [];
 
-        const historias = [
-            {
+        if (pipoUser) {
+            historias.push({
                 titulo: 'Mi aventura en el bosque mágico',
                 contenido: 'Era una vez un niño llamado Juan que encontró un bosque mágico...',
                 autorId: pipoUser.id,
                 likes: 12
-            },
-            {
+            });
+        }
+
+        if (docenteUser) {
+            historias.push({
                 titulo: 'La historia de la niña valiente',
                 contenido: 'En un pueblo lejano vivía una niña muy valiente llamada María...',
                 autorId: docenteUser.id,
                 likes: 8
-            }
-        ];
-
-        for (const historia of historias) {
-            await prisma.historia.create({ data: historia });
+            });
         }
-        console.log(`✅ ${historias.length} historias de prueba creadas`);
+
+        if (historias.length > 0) {
+            for (const historia of historias) {
+                await prisma.historia.create({ data: historia });
+            }
+            console.log(`✅ ${historias.length} historias de prueba creadas`);
+        } else {
+            console.log('⏭️  No se encontraron usuarios para crear historias de prueba');
+        }
 
         console.log('\n🎉 ¡Base de datos poblada exitosamente!');
 
